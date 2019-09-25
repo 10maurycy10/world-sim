@@ -1,6 +1,6 @@
 #include <curses.h>
-enum boutons {BOSS,EXIT,INV,UP,DOWN,RIGHT,LEFT,RESTART};
-constexpr int cont[8] = {13,113,105,104,106,108,107,114};
+enum boutons {BOSS,EXIT,INV,UP,DOWN,RIGHT,LEFT,RESTART,DROP};
+constexpr int cont[9] = {13,113,105,104,106,108,107,114,100};
 const char* items[2] = {"(empty)","test"};
 int inv[10] = {0,0,0,0,0,0,0,0,0,0};
 const char* verson = "0.3";
@@ -111,7 +111,9 @@ obj* rmobj(int x) {
   return y;
 }
 bool give(int id) {
-  for (int x;x<INV;x++) {
+  //msg("call:give");
+  for (int x = 0;x<INV;x++) {
+    //msg("iteration:give");
     if (inv[x]==0) {
       inv[x] = id;
       return 0;
@@ -124,7 +126,7 @@ void movep(int x,int y) {
     if (mapobj[z] == NULL) {;} else {
       if (((*(mapobj[z])).y == y)&&((*(mapobj[z])).x == x)) {
         switch ((*(mapobj[z])).id) {
-          case 1:if(give(1)==0){free(rmobj(y));}break;
+          case 1:if(give(1)==0){free(rmobj(z));}break;
           case 0:break;
         }
       }
@@ -173,6 +175,12 @@ void restart() {
   }
   genaratemap();
   render();
+}
+void drop() {
+  obj* o = (obj*)malloc(sizeof(obj));
+  o -> x = ;
+  o -> x = ;
+  o -> id = ;
 }
 bool mechanics(int key) {
   clearmsg();
