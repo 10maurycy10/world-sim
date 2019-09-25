@@ -1,9 +1,12 @@
 #include <curses.h>
 enum boutons {BOSS,EXIT,INV,UP,DOWN,RIGHT,LEFT,RESTART,DROP};
 constexpr int cont[9] = {13,113,105,104,106,108,107,114,100};
-const char* items[2] = {"(empty)","test"};
+const char* items[2] = {"(empty)","test   "};
+
+#define INVT 10
+
 int inv[10] = {0,0,0,0,0,0,0,0,0,0};
-const char* verson = "0.3";
+const char* verson = "0.4";
 
 int playerx = 2;
 int playery = 2;
@@ -79,8 +82,8 @@ void cleanln(int x) {
     if (mapobj[y] == NULL) {;}else{
       if ((*(mapobj[y])).y == x) {
         switch ((*(mapobj[y])).id) {
-          case 1:mvaddch(x,(*(mapobj[y])).y,111);break;
-          case 0:mvaddch(x,(*(mapobj[y])).y,109);break;
+          case 1:mvaddch(x,(*(mapobj[y])).x,111);break;
+          case 0:mvaddch(x,(*(mapobj[y])).x,109);break;
         }
       }
     }
@@ -142,12 +145,12 @@ void movep(int x,int y) {
 }
 void inventory() {
   msg("you have : -more-");
-  for (int y = 0;y<10;y++) {
+  for (int y = 0;y<INVT;y++) {
     move(y+1,0);
     printw("-  %d : %s  -",y,items[inv[y]]);
   }
   getch();
-  for (int y = 0;y<10;y++) {cleanln(y+1);}
+  for (int y = 0;y<INVT;y++) {cleanln(y+1);}
   clearmsg();
 }
 void render() {
@@ -166,7 +169,7 @@ void genaratemap() {
 }
 void restart() {
   movep(3,2);
-  for (int x = 0;x<INV;x++) {
+  for (int x = 0;x<INVT;x++) {
     inv[x] = 0;
   }
   for (int x = 0;x<OBJ;x++) {
@@ -177,10 +180,26 @@ void restart() {
   render();
 }
 void drop() {
+  msg("drop what?");
+  int id = getch()-48;
+  clearmsg();
+  if ((id>INVT)||(id<0)) {
+    msg("that item dose not egist.");
+    return;
+  }
+  if (inv[id] == 0) {
+    msg("that slot is empty");
+    return;
+  }
   obj* o = (obj*)malloc(sizeof(obj));
-  o -> x = ;
-  o -> x = ;
-  o -> id = ;
+  o -> x = playerx;
+  o -> y = playery;
+  o -> id = inv[id];
+  if (addobj(o)) {
+    return;
+  }
+  inv[id] = 0;
+  return;
 }
 bool mechanics(int key) {
   clearmsg();
@@ -196,6 +215,7 @@ bool mechanics(int key) {
     case cont[LEFT]:movep(playerx-1,playery+0);return 1;
     case cont[RIGHT]:movep(playerx+1,playery+0);return 1;
     case cont[RESTART]:restart();return 1;
+    case cont[DROP]:drop();return 1;
 
   }
 
