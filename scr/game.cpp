@@ -79,7 +79,7 @@ void cleanln(int x) {
     if (mapobj[y] == NULL) {;}else{
       if ((*(mapobj[y])).y == x) {
         switch ((*(mapobj[y])).id) {
-          case 1:mvaddch(x,(*(mapobj[y])).y,105);break;
+          case 1:mvaddch(x,(*(mapobj[y])).y,111);break;
           case 0:mvaddch(x,(*(mapobj[y])).y,109);break;
         }
       }
@@ -110,7 +110,26 @@ obj* rmobj(int x) {
   mapobj[x] = NULL;
   return y;
 }
+bool give(int id) {
+  for (int x;x<INV;x++) {
+    if (inv[x]==0) {
+      inv[x] = id;
+      return 0;
+    }
+  }
+  return 1;
+}
 void movep(int x,int y) {
+  for (int z=0;z<OBJ;z++) {
+    if (mapobj[z] == NULL) {;} else {
+      if (((*(mapobj[z])).y == y)&&((*(mapobj[z])).x == x)) {
+        switch ((*(mapobj[z])).id) {
+          case 1:if(give(1)==0){free(rmobj(y));}break;
+          case 0:break;
+        }
+      }
+    }
+  }
   int oy = playery;
   if (map[y-1][x]=='X') {return;} else{
     playerx = x;
@@ -139,12 +158,12 @@ void render() {
 void genaratemap() {
   obj* o = (obj*)malloc(sizeof(obj));
   o->y = 2;
-  o->x = 5;
-  o->id = 0;
+  o->x = 2;
+  o->id = 1;
   addobj(o);
 }
 void restart() {
-  movep(2,2);
+  movep(3,2);
   for (int x = 0;x<INV;x++) {
     inv[x] = 0;
   }
@@ -173,7 +192,7 @@ bool mechanics(int key) {
   }
 
   msg("Unrecognized command.");
-  //mvprintw(1,0,"%d", key);
+  mvprintw(1,0,"%d", key);
   return 1;
 }
 
@@ -189,8 +208,7 @@ int game() {
   refresh();
   getch();
   clear();
-  render();
-  movep(2,2);
+  restart();
   while (running) {
     key = getch();
     running = mechanics(key);
