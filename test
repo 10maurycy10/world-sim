@@ -1,0 +1,12 @@
+
+C:\game>cd build 
+
+C:\game\build>..\build\main.exe
+
+C:\game\build>cd .. 
+
+C:\game>cd build 
+
+C:\game\build>..\build\main.exe
+
+C:\game\build>cd .. 
