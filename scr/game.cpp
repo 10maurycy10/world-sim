@@ -82,7 +82,7 @@ void cleanln(int x) {
     if (mapobj[y] == NULL) {;}else{
       if ((*(mapobj[y])).y == x) {
         switch ((*(mapobj[y])).id) {
-          case 1:mvaddch(x,(*(mapobj[y])).x,111);break;
+          case 1:mvaddch(x,(*(mapobj[y])).x,73);break;
           case 0:mvaddch(x,(*(mapobj[y])).x,109);break;
         }
       }
@@ -242,6 +242,9 @@ int game() {
     running = mechanics(key);
     refresh();
   }
+  clear();
+  refresh();
   endwin();
+  printf("BY M.Z\n");
   return 0;
 }
