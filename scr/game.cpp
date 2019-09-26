@@ -1,6 +1,6 @@
 #include <curses.h>
-enum boutons {BOSS,EXIT,INV,UP,DOWN,RIGHT,LEFT,RESTART,DROP};
-constexpr int cont[9] = {13,113,105,104,106,108,107,114,100};
+enum boutons {BOSS,EXIT,INV,UP,DOWN,RIGHT,LEFT,RESTART,DROP,DEBUG};
+constexpr int cont[10] = {13,113,105,104,106,108,107,114,100,115};
 const char* items[2] = {"(empty)","test   "};
 
 #define INVT 10
@@ -115,7 +115,7 @@ obj* rmobj(int x) {
 }
 bool give(int id) {
   //msg("call:give");
-  for (int x = 0;x<INV;x++) {
+  for (int x = 0;x<INVT;x++) {
     //msg("iteration:give");
     if (inv[x]==0) {
       inv[x] = id;
@@ -195,7 +195,7 @@ void drop() {
   o -> x = playerx;
   o -> y = playery;
   o -> id = inv[id];
-  if (addobj(o)) {
+  if (addobj(o)==-1) {
     return;
   }
   inv[id] = 0;
@@ -216,6 +216,13 @@ bool mechanics(int key) {
     case cont[RIGHT]:movep(playerx+1,playery+0);return 1;
     case cont[RESTART]:restart();return 1;
     case cont[DROP]:drop();return 1;
+    case cont[DEBUG]:
+      obj* o = (obj*)malloc(sizeof(obj));
+      o -> x = playerx;
+      o -> y = playery;
+      o -> id = 1;
+      addobj(o);
+      return 1;
 
   }
 
