@@ -224,7 +224,7 @@ bool mechanics(int key) {
   return 1;
 }
 
-int game() {
+void game() {
   bool running = true;
   int key = 0;
   initscr();
@@ -246,5 +246,5 @@ int game() {
   refresh();
   endwin();
   printf("BY M.Z\n");
-  return 0;
+  return;
 }
