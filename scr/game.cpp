@@ -247,7 +247,7 @@ bool mechanics(int key) {
 
 
   msg("Unrecognized command.");
-  mvprintw(1,0,"%d", key);
+  //mvprintw(1,0,"%d", key);
   return 1;
 }
 
