@@ -1,6 +1,7 @@
 #include <curses.h>
+#include <stdlib.h>
 enum boutons {BOSS,EXIT,INV,UP,DOWN,RIGHT,LEFT,RESTART,DROP,DEBUG};
-constexpr int cont[10] = {13,113,105,104,106,108,107,114,100,115};
+constexpr int cont[10] = {13,113,105,104,106,108,107,114,100,99};
 const char* items[2] = {"(empty)","test   "};
 
 #define INVT 10
@@ -14,6 +15,27 @@ int playery = 2;
 #define MAPY 20
 #define MAPX 20
 
+char rendermap[MAPY][MAPX+1] = {
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    "};
 
 
 char map[MAPY][MAPX+1] = {//20 fog
@@ -76,7 +98,7 @@ void msg(const char* a) {
 }
 void cleanln(int x) {
   move(x,0);
-  printw(map[x-1]);
+  printw(rendermap[x-1]);
 
   for (int y=0;y<OBJ;y++) {
     if (mapobj[y] == NULL) {;}else{
@@ -136,12 +158,13 @@ void movep(int x,int y) {
     }
   }
   int oy = playery;
+  rendermap[y][x] = map[y][x];
   if (map[y-1][x]=='X') {return;} else{
     playerx = x;
     playery = y;
-    cleanln(oy);
     mvaddch(y,x,'@');
   }
+  cleanln(oy);
 }
 void inventory() {
   msg("you have : -more-");
@@ -217,12 +240,8 @@ bool mechanics(int key) {
     case cont[RESTART]:restart();return 1;
     case cont[DROP]:drop();return 1;
     case cont[DEBUG]:
-      obj* o = (obj*)malloc(sizeof(obj));
-      o -> x = playerx;
-      o -> y = playery;
-      o -> id = 1;
-      addobj(o);
-      return 1;
+
+      return 0;
 
   }
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+gcc scr/main.cpp -o build/main.exe -Wall -ncurses

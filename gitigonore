@@ -1,4 +1,4 @@
 #igonore compiled files
-build\*.exe
+*.exe
 #and curses updates
-build\curses2.dll
+*.dll
