@@ -158,12 +158,12 @@ void movep(int x,int y) {
     }
   }
   int oy = playery;
-  rendermap[y][x] = map[y][x];
   if (map[y-1][x]=='X') {return;} else{
     playerx = x;
     playery = y;
     mvaddch(y,x,'@');
   }
+  rendermap[y-1][x] = map[y-1][x];
   cleanln(oy);
 }
 void inventory() {
@@ -229,7 +229,6 @@ bool mechanics(int key) {
   if (map==NULL) {
     msg("WHAT!");
   }
-  mvprintw("%d,%d",playerx,playery);
   switch (key) {
     case cont[EXIT]:return 0;
     case cont[INV]:inventory();return 1;
@@ -245,6 +244,7 @@ bool mechanics(int key) {
       return 0;
 
   }
+
 
   msg("Unrecognized command.");
   mvprintw(1,0,"%d", key);
@@ -267,6 +267,7 @@ void game() {
   while (running) {
     key = getch();
     running = mechanics(key);
+    mvprintw(0,0,"%d,%d",playerx,playery);
     refresh();
   }
   clear();
