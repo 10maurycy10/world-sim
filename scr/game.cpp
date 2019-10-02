@@ -60,13 +60,19 @@ char map[MAPY][MAPX+1] = {//20 fog
   "X..................X",
   "XXXXXXXXXXXXXXXXXXXX"};
 
-struct obj {
+  struct obj {
   int id; /* 0: test/null  1 - 101: items 101 - 201: mosters/npcs*/
   int x;
   int y;
 };
 #define OBJ 20
 struct obj* mapobj[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+#define ROOM 3
+int roomdata[3][4] = {
+  {0 ,0 ,5 ,20},
+  {7 ,0 ,16,20},
+  {18,0 ,20,20}
+};
 /******************************************************************************
 Screan layout
 1: meige
@@ -92,6 +98,16 @@ Screan layout
 21:
 
 ******************************************************************************/
+int getRoomId(int x,int y) {
+  for (int i = 0;i<ROOM;i++) {
+  if (!(roomdata[i][0]<x)&&(!(roomdata[i][1]>y))) {
+    if (!(roomdata[i][2]>x)&&(!(roomdata[i][3]<y))) {
+        return x+1;
+      }
+    }
+  }
+  return 0;
+}
 void msg(const char* a) {
   move(0,0);
   printw(a);
@@ -158,7 +174,7 @@ void movep(int x,int y) {
     }
   }
   int oy = playery;
-  if (map[y-1][x]=='X') {return;} else{
+  if (map[y-1][x]=='X') {rendermap[y-1][x] = map[y-1][x];cleanln(y);;return;} else{
     playerx = x;
     playery = y;
     mvaddch(y,x,'@');
@@ -247,7 +263,6 @@ bool mechanics(int key) {
 
 
   msg("Unrecognized command.");
-  //mvprintw(1,0,"%d", key);
   return 1;
 }
 
@@ -267,7 +282,7 @@ void game() {
   while (running) {
     key = getch();
     running = mechanics(key);
-    //mvprintw(0,0,"%d,%d",playerx,playery);
+    mvprintw(1,0,"%d", getRoomId(playerx,playery));
     refresh();
   }
   clear();
