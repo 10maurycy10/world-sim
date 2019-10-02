@@ -7,7 +7,7 @@ const char* items[2] = {"(empty)","test   "};
 #define INVT 10
 
 int inv[10] = {0,0,0,0,0,0,0,0,0,0};
-const char* verson = "0.4";
+const char* verson = "0.5";
 
 int playerx = 2;
 int playery = 2;
