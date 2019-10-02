@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <windows.h>
 #include "game.cpp"
-int Main (int avrg,char** a ) {
+int WINAPI WinMain (HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow) {
     game();
     return 0;
 }

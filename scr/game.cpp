@@ -229,6 +229,7 @@ bool mechanics(int key) {
   if (map==NULL) {
     msg("WHAT!");
   }
+  mvprintw("%d,%d",playerx,playery);
   switch (key) {
     case cont[EXIT]:return 0;
     case cont[INV]:inventory();return 1;
