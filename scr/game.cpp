@@ -267,7 +267,7 @@ void game() {
   while (running) {
     key = getch();
     running = mechanics(key);
-    mvprintw(0,0,"%d,%d",playerx,playery);
+    //mvprintw(0,0,"%d,%d",playerx,playery);
     refresh();
   }
   clear();
