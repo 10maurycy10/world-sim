@@ -7,7 +7,7 @@ const char* items[2] = {"(empty)","test   "};
 #define INVT 10
 
 int inv[10] = {0,0,0,0,0,0,0,0,0,0};
-const char* verson = "0.5";
+const char* verson = "0.6";
 
 int playerx = 2;
 int playery = 2;
@@ -57,7 +57,7 @@ char map[MAPY][MAPX+1] = {//20 fog
   "XXXXXXXXX+XXXXXXXXXX",
   "X..................X",
   "X..................X",
-  "X..................X",
+  "X%.................X",
   "XXXXXXXXXXXXXXXXXXXX"};
 
   struct obj {
@@ -73,6 +73,12 @@ int roomdata[3][4] = {
   {7 ,0 ,16,20},
   {18,0 ,20,20}
 };
+
+
+void clearmap() {;}
+
+
+
 /******************************************************************************
 Screan layout
 1: meige
@@ -106,8 +112,10 @@ int getRoomId(int x,int y) {
       }
     }
   }
+
   return 0;
 }
+
 void msg(const char* a) {
   move(0,0);
   printw(a);
@@ -126,31 +134,35 @@ void cleanln(int x) {
       }
     }
   }
+
   if (x==playery) {
     mvaddch(playery,playerx,'@');
   }
 }
+
 void clearmsg() {
   move(0,0);
   clrtoeol();
 }
+
 int addobj(struct obj* o) {
   for(int x = 0;x<OBJ;x++) {
     if (mapobj[x] == NULL) {
       mapobj[x] = o;
-      //msg("loaded");
       cleanln(o->y);
       return x;
     }
   }
-  //  msg("nonloaded");
+
   return -1;
 }
+
 obj* rmobj(int x) {
   obj* y = mapobj[x];
   mapobj[x] = NULL;
   return y;
 }
+
 bool give(int id) {
   //msg("call:give");
   for (int x = 0;x<INVT;x++) {
@@ -160,8 +172,44 @@ bool give(int id) {
       return 0;
     }
   }
+
   return 1;
 }
+
+void render() {
+  for(int x = 0;x<(MAPY+1);x++) {
+    cleanln(x);
+
+  }
+}
+
+void genaratemap() {
+  obj* o = (obj*)malloc(sizeof(obj));
+  o->y = 2;
+  o->x = 2;
+  o->id = 1;
+
+  addobj(o);
+}
+
+void movep(int x,int y);
+void restart(bool a) {
+  movep(3,2);
+  if (a) {
+    for (int x = 0;x<INVT;x++) {
+        inv[x] = 0;
+      }
+    }
+
+  for (int x = 0;x<OBJ;x++) {
+    free(mapobj[x]);
+    mapobj[x] = NULL;
+  }
+
+  genaratemap();
+  render();
+}
+
 void movep(int x,int y) {
   for (int z=0;z<OBJ;z++) {
     if (mapobj[z] == NULL) {;} else {
@@ -173,78 +221,73 @@ void movep(int x,int y) {
       }
     }
   }
+
   int oy = playery;
   if (map[y-1][x]=='X') {rendermap[y-1][x] = map[y-1][x];cleanln(y);;return;} else{
     playerx = x;
     playery = y;
     mvaddch(y,x,'@');
   }
+
+  if (map[y-1][x]=='%') {
+    msg("next leaval");
+    getch();
+    clearmsg();
+    restart(0);
+    return;
+  }
+
   rendermap[y-1][x] = map[y-1][x];
   cleanln(oy);
 }
+
 void inventory() {
   msg("you have : -more-");
+
   for (int y = 0;y<INVT;y++) {
     move(y+1,0);
     printw("-  %d : %s  -",y,items[inv[y]]);
   }
+
   getch();
   for (int y = 0;y<INVT;y++) {cleanln(y+1);}
   clearmsg();
 }
-void render() {
 
-  for(int x = 0;x<(MAPY+1);x++) {
-    cleanln(x);
-  }
-}
-
-void genaratemap() {
-  obj* o = (obj*)malloc(sizeof(obj));
-  o->y = 2;
-  o->x = 2;
-  o->id = 1;
-  addobj(o);
-}
-void restart() {
-  movep(3,2);
-  for (int x = 0;x<INVT;x++) {
-    inv[x] = 0;
-  }
-  for (int x = 0;x<OBJ;x++) {
-    free(mapobj[x]);
-    mapobj[x] = NULL;
-  }
-  genaratemap();
-  render();
-}
 void drop() {
   msg("drop what?");
   int id = getch()-48;
   clearmsg();
+
   if ((id>INVT)||(id<0)) {
     msg("that item dose not egist.");
     return;
   }
+
   if (inv[id] == 0) {
     msg("that slot is empty");
     return;
   }
+
   obj* o = (obj*)malloc(sizeof(obj));
   o -> x = playerx;
   o -> y = playery;
   o -> id = inv[id];
+
   if (addobj(o)==-1) {
     return;
   }
+
   inv[id] = 0;
   return;
 }
+
 bool mechanics(int key) {
   clearmsg();
   if (map==NULL) {
     msg("WHAT!");
   }
+
   switch (key) {
     case cont[EXIT]:return 0;
     case cont[INV]:inventory();return 1;
@@ -253,14 +296,10 @@ bool mechanics(int key) {
     case cont[DOWN]:movep(playerx+0,playery+1);return 1;
     case cont[LEFT]:movep(playerx-1,playery+0);return 1;
     case cont[RIGHT]:movep(playerx+1,playery+0);return 1;
-    case cont[RESTART]:restart();return 1;
+    case cont[RESTART]:restart(1);return 1;
     case cont[DROP]:drop();return 1;
-    case cont[DEBUG]:
-
-      return 0;
-
+    case cont[DEBUG]:return 0;
   }
-
 
   msg("Unrecognized command.");
   return 1;
@@ -278,16 +317,20 @@ void game() {
   refresh();
   getch();
   clear();
-  restart();
+
+  restart(1);
+
   while (running) {
     key = getch();
     running = mechanics(key);
     mvprintw(1,0,"%d", getRoomId(playerx,playery));
     refresh();
   }
+
   clear();
   refresh();
   endwin();
-  printf("BY M.Z\n");
+  clear();
+  printf("By nVoidPointer (nvoidpointer@gmail.com)\n");
   return;
 }
