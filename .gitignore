@@ -1,4 +1,4 @@
 #igonore compiled files
-*.exe
+.\*.exe
 #and curses updates
-*.dll
+.\*.dll

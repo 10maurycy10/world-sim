@@ -5,8 +5,8 @@ constexpr int cont[10] = {13,113,105,104,106,108,107,114,100,99};
 const char* items[2] = {"(empty)","test   "};
 
 #define INVT 10
-
 int inv[10] = {0,0,0,0,0,0,0,0,0,0};
+
 const char* verson = "0.6";
 
 int playerx = 2;
