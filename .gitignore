@@ -1,5 +1,7 @@
-#igonore compiled files
+bin/
+settings/
+
+# Executables
 *.exe
-#and curses updates
 *.dll
-run.bat
+

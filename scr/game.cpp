@@ -106,13 +106,12 @@ Screan layout
 ******************************************************************************/
 int getRoomId(int x,int y) {
   for (int i = 0;i<ROOM;i++) {
-  if (!(roomdata[i][0]<x)&&(!(roomdata[i][1]>y))) {
-    if (!(roomdata[i][2]>x)&&(!(roomdata[i][3]<y))) {
-        return x+1;
+  if (!(roomdata[i][0]>x)&&(!(roomdata[i][1]>y))) {
+    if (!(roomdata[i][2]<x)&&(!(roomdata[i][3]<y))) {
+        return i+1;
       }
     }
   }
-
   return 0;
 }
 
