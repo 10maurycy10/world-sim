@@ -449,7 +449,7 @@ void fillroom(int room) { //fill a room room:roomid
 }
 
 void renderline(char* line,int y) {//render a line line: text y: pos on screan
-  mvprintw(0,0,"%d",getRoomId(gPlayerx,gPlayery));
+  //mvprintw(0,0,"%d",getRoomId(gPlayerx,gPlayery));
   move(y,0);
   for (int x = 0;x<MAPX;x++) {
     mvaddch(y,x,line[x]);
