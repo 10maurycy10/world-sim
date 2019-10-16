@@ -73,15 +73,15 @@ char map[MAPY][MAPX+2] = {//the map
   "X.....XXXXX......X...X...X",
   "X.....+###+......XXXXX...X",
   "X.....XXXXX......+###+...X",
-  "XXXXXXX...X......XXXXX+XX.",
-  "..........XXXXX+XX....#...",
-  "......................#...",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
+  "XXX+XXX...X......XXXXX+XXX",
+  "..X#X.....XXXXX+XX....#...",
+  "..X#X.................#...",
+  "..X#X.....................",
+  ".XX+XXXXX.................",
+  ".X......X.................",
+  ".X......X.................",
+  ".X......X.................",
+  ".XXXXXXXX.................",
   "..........................",
   "..........................",
   "..........................",
@@ -106,12 +106,12 @@ char map[MAPY][MAPX+2] = {//the map
 };
 #define OBJ 20 //the entaty maz
 struct obj* mapobj[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //pointers for the entitys
-#define ROOM 1 //room count
+#define ROOM 4 //room count
 int roomdata[ROOM][4] = { //the room data
-  {0,0,MAPX,MAPY-1},  //test room
-  //{0 ,0 ,20,5},
-  //{0 ,7 ,20,13},
-  //{0,15 ,20,20}
+  {0 ,0 ,6 ,5 },  //test room
+  {10,0 ,17,6 },
+  {21,1 ,25,5 },
+  {1 ,9 ,8 ,13}
 };
 
 
@@ -415,8 +415,8 @@ void fillroom(int room) { //fill a room room:roomid
     if (map[gPlayery-1][gPlayerx] == '#' || map[gPlayery-1][gPlayerx] == '+' || map[gPlayery-1][gPlayerx] == '.') {
       rendermap[gPlayery-1][gPlayerx] = map[gPlayery-1][gPlayerx];
     } //all agationt points
-    if (map[gPlayery+1][gPlayerx] == '#' || map[gPlayery][gPlayerx+1] == '+'|| map[gPlayery][gPlayerx+1] == '.') {
-      rendermap[gPlayery][gPlayerx+1] = map[gPlayery][gPlayerx+1];
+    if (map[gPlayery+1][gPlayerx] == '#' || map[gPlayery+1][gPlayerx] == '+'|| map[gPlayery+1][gPlayerx] == '.') {
+      rendermap[gPlayery+1][gPlayerx] = map[gPlayery+1][gPlayerx];
     }
     if (map[gPlayery][gPlayerx+1] == '#' || map[gPlayery][gPlayerx+1] == '+' || map[gPlayery][gPlayerx+1] == '.') {
       rendermap[gPlayery][gPlayerx+1] = map[gPlayery][gPlayerx+1];
@@ -428,18 +428,28 @@ void fillroom(int room) { //fill a room room:roomid
     cleanln(gPlayery+1); //redraw it all
     cleanln(gPlayery+2);
     cleanln(gPlayery);
-
     return;
-  }
-  for (int chy = roomdata[index][1];roomdata[index][3]>=chy;chy++) { //else for all og the room
-    for (int chx = roomdata[index][0];roomdata[index][2]>chx;chx++) {
-      rendermap[chy][chx] = map[chy][chx]; //fill it
+  } else {
+
+    for (int chy = roomdata[index][1];roomdata[index][3]>=chy;chy++) { //else for all og the room
+      for (int chx = roomdata[index][0];roomdata[index][2]>=chx;chx++) {
+        if (getRoomId(chx,chy)==gRoom) {
+          rendermap[chy][chx] = map[chy][chx];
+        } else {
+          if (map[chy][chx]=='.') {
+            rendermap[chy][chx] = ' ';
+          } else {
+            rendermap[chy][chx] = map[chy][chx];
+          }
+        }
+      }
+      cleanln(chy+1); //redraw the line
     }
-    cleanln(chy+1); //redraw the line
   }
 }
 
 void renderline(char* line,int y) {//render a line line: text y: pos on screan
+  mvprintw(0,0,"%d",getRoomId(gPlayerx,gPlayery));
   move(y,0);
   for (int x = 0;x<MAPX;x++) {
     mvaddch(y,x,line[x]);
