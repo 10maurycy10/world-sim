@@ -17,14 +17,14 @@ void debug(char* a) {;}
 
 
 
-enum boutons {BOSS,EXIT,INV,UP,DOWN,RIGHT,LEFT,RESTART,DROP,DEBUG}; //the controls
-constexpr int gCont[10] = {13,113,105,104,106,108,107,114,100,99}; //the keys for the controls
-const char* gItems[2] = {"(empty)","test   "};//the item names
+enum boutons {BOSS=13,EXIT=113,INV=105,UP=104,DOWN=106,RIGHT=108,LEFT=107,RESTART=114,DROP=100,DEBUG=99}; //the controls
+
+const char* gItems[2] = {"(empty)"," rock on a stick "};//the item names
 
 #define INVT 10 //the invetory size
 int inv[10] = {0,0,0,0,0,0,0,0,0,0};//the invetry itslef
 
-const char* gVerson = "0.7";
+const char* gVerson = "0.8";
 
 int gPlayerx = 2;//player posision
 int gPlayery = 1;
@@ -100,12 +100,13 @@ char map[MAPY][MAPX+2] = {//the map
   };
 
   struct obj { //entaty data
-  int id; /* 0: test/null  1 - 101: gItems 101 - 201: mosters/npcs*/
+  bool isnpc;
+  int id;
   int x;
   int y;
 };
 #define OBJ 20 //the entaty maz
-struct obj* mapobj[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //pointers for the entitys
+struct obj* mapobj[OBJ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //pointers for the entitys
 #define ROOM 4 //room count
 int roomdata[ROOM][4] = { //the room data
   {0 ,0 ,6 ,5 },  //test room
@@ -183,13 +184,18 @@ void cleanln(int y) { //redray a line x: on screan pos
     renderline(rendermap[y-1],y);
   }
 
-  for (int ypos=0;ypos<OBJ;ypos++) { //render entetys
-    if (mapobj[ypos] == NULL) {;}else{
-      if ((*(mapobj[ypos])).y+1 == ypos) {
-        if (getRoomId((*(mapobj[ypos])).x,(*(mapobj[ypos])).y)==gRoom){
-          switch ((*(mapobj[ypos])).id) {
-            case 1:mvaddch(ypos,(*(mapobj[ypos])).x,73);break;
-            case 0:mvaddch(ypos,(*(mapobj[ypos])).x,109);break;
+  for (int oi=0;oi<OBJ;oi++) { //render entetys
+    if (mapobj[oi]==NULL) {} else {
+      if ((*(mapobj[oi])).y+1 == y) {
+        if (getRoomId((*(mapobj[oi])).x,(*(mapobj[oi])).y)==gRoom){
+          if ((*(mapobj[oi])).isnpc) {
+            switch ((*(mapobj[oi])).id) {
+              case 0:mvaddch(y,(*(mapobj[oi])).x,0x4d);break;
+            }
+          }
+          switch ((*(mapobj[oi])).id) {
+            case 1:mvaddch(y,(*(mapobj[oi])).x,73);break;
+            case 0:mvaddch(y,(*(mapobj[oi])).x,109);break;
           }
         }
       }
@@ -218,8 +224,8 @@ int addobj(struct obj* o) { //add an entey
   return -1;
 }
 
-obj* rmobj(int x) { //reomve an enty (not dealocate it)
-  obj* y = mapobj[x];
+struct obj* rmobj(int x) { //reomve an enty (not dealocate it)
+  struct obj* y = mapobj[x];
   mapobj[x] = NULL;
   return y;
 }
@@ -248,7 +254,8 @@ void genaratemap() { //reset the map
     mapobj[x] = NULL;
   }
 
-  obj* o = (obj*)malloc(sizeof(obj));
+  struct obj* o = (struct obj*)malloc(sizeof(struct obj));
+  o->isnpc = false;
   o->y = 2;
   o->x = 2;
   o->id = 1;
@@ -274,13 +281,23 @@ void restart(bool a) { //reset it all a:if tho reset inv
   render();
 }
 
+void fight(struct obj*);
+
 void movep(int x,int y) { //move the player
   for (int z=0;z<OBJ;z++) {
     if (mapobj[z] == NULL) {;} else {
-      if (((*(mapobj[z])).y == y)&&((*(mapobj[z])).x == x)) {
-        switch ((*(mapobj[z])).id) {
-          case 1:if(give(1)==0){free(rmobj(z));}break;
-          case 0:break;
+
+      if ((*(mapobj[z])).isnpc){
+        if (((*(mapobj[z])).y == y)&&((*(mapobj[z])).x == x)) {
+          fight(mapobj[z]);
+          return;
+        }
+      }else{
+        if (((*(mapobj[z])).y == y)&&((*(mapobj[z])).x == x)) {
+          switch ((*(mapobj[z])).id) {
+            case 1:if(give(1)==0){free(rmobj(z));}break;
+            case 0:break;
+          }
         }
       }
     }
@@ -338,17 +355,33 @@ void drop() {
     return;
   }
 
-  obj* o = (obj*)malloc(sizeof(obj));
+  struct obj* o = (struct obj*)malloc(sizeof(struct obj));
+  o->isnpc = false;
   o -> x = gPlayerx;
   o -> y = gPlayery;
   o -> id = inv[id];
 
   if (addobj(o)==-1) {
+    free(o);
     return;
   }
 
   inv[id] = 0;
   return;
+}
+
+void spawn(int x,int y,int id) {
+  struct obj* o = (struct obj*)malloc(sizeof(struct obj));
+  o->isnpc = true;
+  o -> x = x;
+  o -> y = y;
+  o -> id = id;
+
+  if (addobj(o)==-1) {
+    free(o);
+    return;
+  }
+
 }
 
 bool mechanics(int key) {
@@ -358,21 +391,24 @@ bool mechanics(int key) {
   }
 
   switch (key) {
-    case gCont[EXIT]:return 0;
-    case gCont[INV]:inventory();return 1;
+    case EXIT:return 0;
+    case INV:inventory();return 1;
 
-    case gCont[UP]:movep(gPlayerx+0,gPlayery-1);return 1;
-    case gCont[DOWN]:movep(gPlayerx+0,gPlayery+1);return 1;
-    case gCont[LEFT]:movep(gPlayerx-1,gPlayery+0);return 1;
-    case gCont[RIGHT]:movep(gPlayerx+1,gPlayery+0);return 1;
-    case gCont[RESTART]:restart(1);return 1;
-    case gCont[DROP]:drop();return 1;
-    case gCont[DEBUG]:return 0;
+    case UP:movep(gPlayerx+0,gPlayery-1);return 1;
+    case DOWN:movep(gPlayerx+0,gPlayery+1);return 1;
+    case LEFT:movep(gPlayerx-1,gPlayery+0);return 1;
+    case RIGHT:movep(gPlayerx+1,gPlayery+0);return 1;
+    case RESTART:restart(1);return 1;
+    case DROP:drop();return 1;
+    case DEBUG:spawn(gPlayerx,gPlayery+1,0);return 1;
   }
 
   msg("Unrecognized command.");
+  mvprintw(20,0,"%d",key);
   return 1;
 }
+
+void ticknpc();
 
 void game() {
   bool running = true;
@@ -382,7 +418,7 @@ void game() {
   noecho();
   curs_set(0);
   move(0,0);
-  printw("Text only game. [by M.Z.] -more- \ngVerson : %s",gVerson);
+  printw("Text only game. [by M.Z.] -more- \nVerson : %s",gVerson);
   refresh();
   getch();
   clear();
@@ -393,6 +429,7 @@ void game() {
   while (running) {
     key = getch();
     running = mechanics(key);
+    ticknpc();
     //cleanln(2);
     //mvprintw(1,0,"%d",getRoomId(gPlayerx,gPlayery));
     refresh();
@@ -454,4 +491,23 @@ void renderline(char* line,int y) {//render a line line: text y: pos on screan
   for (int x = 0;x<MAPX;x++) {
     mvaddch(y,x,line[x]);
   }
+}
+
+void ticknpc() {
+  for (int iNpc = 0;iNpc<OBJ;iNpc++) {
+    if (mapobj[iNpc]==NULL) {
+
+    } else {
+      if((*(mapobj[iNpc])).isnpc) {
+        switch ((*(mapobj[iNpc])).id) {
+          case 0: break;
+        }
+      }
+    }
+  }
+}
+
+void fight(struct obj* npc) {
+  msg("you poke an npc");
+  return;
 }
