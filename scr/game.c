@@ -26,14 +26,14 @@ int inv[10] = {0,0,0,0,0,0,0,0,0,0};//the invetry itslef
 
 const char* gVerson = "0.8";
 
-int gPlayerx = 2;//player posision
-int gPlayery = 1;
+int gPlayerx;// = 2;//player posision
+int gPlayery;// = 1;
 int gRoom = 0;
 
 #define MAPY 29 //map size
 #define MAPX 26
 
-char rendermap[MAPY][MAPX+2] = { //map + fog of war
+char rendermap[MAPY][MAPX+1] = { //map + fog of war
   "..........................",
   "..........................",
   "..........................",
@@ -67,22 +67,22 @@ char rendermap[MAPY][MAPX+2] = { //map + fog of war
 
 
 
-char map[MAPY][MAPX+2] = {//the map
+char map[MAPY][MAPX+1] = {//the map
   "XXXXXXX...XXXXXXXX........",
   "X.....X...X......X...XXXXX",
-  "X.....XXXXX......X...X...X",
+  "X.....XXXXX......X...X%..X",
   "X.....+###+......XXXXX...X",
   "X.....XXXXX......+###+...X",
-  "XXX+XXX...X......XXXXX+XXX",
-  "..X#X.....XXXXX+XX....#...",
-  "..X#X.................#...",
-  "..X#X.....................",
-  ".XX+XXXXX.................",
-  ".X......X.................",
-  ".X......X.................",
-  ".X......X.................",
-  ".XXXXXXXX.................",
-  "..........................",
+  "XXX+XXX...X......XXXXXXXXX",
+  "..X#X.....XXXXX+XX........",
+  "..X#X.......X###X.........",
+  "..X#X.......X#XXX.........",
+  ".XX+XXXXX...X#X...........",
+  ".X......XXXXX+XXXX........",
+  ".X......+###+....X........",
+  ".X......XXXXX....X........",
+  ".XXX+XXXX...X+XXXX........",
+  "....X.....................",
   "..........................",
   "..........................",
   "..........................",
@@ -107,12 +107,14 @@ char map[MAPY][MAPX+2] = {//the map
 };
 #define OBJ 20 //the entaty maz
 struct obj* mapobj[OBJ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //pointers for the entitys
-#define ROOM 4 //room count
+#define ROOM 5 //room count
 int roomdata[ROOM][4] = { //the room data
   {0 ,0 ,6 ,5 },  //test room
   {10,0 ,17,6 },
   {21,1 ,25,5 },
-  {1 ,9 ,8 ,13}
+  {12,10 ,17,13},
+  {10,21,15,28}
+  //{21,1 ,25,5 }
 };
 
 
@@ -159,8 +161,8 @@ void clearmap() {//reset the fog of doooooooooooooooooooomm
 int getRoomId(int x,int y) {
 
   for (int i = 0;i<ROOM;i++) {//for all rooms
-  if ((roomdata[i][0]<=(gPlayerx)) && (roomdata[i][1]<=(gPlayery))) {//if is in romm:
-    if ((roomdata[i][2]>=gPlayerx) && (roomdata[i][3])>=gPlayery) {
+  if ((roomdata[i][0]<=(x)) && (roomdata[i][1]<=(y))) {//if is in romm:
+    if ((roomdata[i][2]>=x) && (roomdata[i][3])>=y) {
         //mvprintw(0,0,"%d",i+1);
         return i+1; //return the roomid
       }
@@ -272,10 +274,11 @@ void restart(bool a) { //reset it all a:if tho reset inv
       }
     }
 
+  gRoom = 0;
 
-
-  movep(3,2);
   genaratemap();
+  gPlayerx=13;
+  gPlayery=27;
   clearmap();
   fillroom(getRoomId(gPlayerx,gPlayery));
   render();
