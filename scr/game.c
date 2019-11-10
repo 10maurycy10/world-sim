@@ -1,6 +1,8 @@
 #include <curses.h>
 #include <stdlib.h>
 
+void renderline(int); //redraw a line
+void movep(int x,int y);
 
 
 #define DEBUGCOMP
@@ -13,200 +15,35 @@ void debug(char* a) {
 void debug(char* a) {;}
 #endif
 
+int curs_x = 1 , curs_y = 1;
 
+enum boutons {BOSS='\n',EXIT='q',UP='w',DOWN='s',RIGHT='d',LEFT='a',RESTART='r',DEBUG='`',P_LAND='x',P_WATER='z',P_LAVA='c'}; //the controls
 
-
-
-enum boutons {BOSS=13,EXIT=113,INV=105,UP=104,DOWN=106,RIGHT=108,LEFT=107,RESTART=114,DROP=100,DEBUG=99}; //the controls
-
-const char* gItems[2] = {"(empty)"," rock on a stick "};//the item names
-
-#define INVT 10 //the invetory size
-int inv[10] = {0,0,0,0,0,0,0,0,0,0};//the invetry itslef
+enum colors {C_MSG,C_GRASS,C_WATER,C_LAVA};
+enum icons {GRASS='w',WATER='~'};
+#define SEALEVAL 0.5f
 
 const char* gVerson = "0.8";
 
-int gPlayerx;// = 2;//player posision
-int gPlayery;// = 1;
-int gRoom = 0;
-
-#define MAPY 29 //map size
-#define MAPX 26
-
-char rendermap[MAPY][MAPX+1] = { //map + fog of war
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  ".........................."
+struct tyle {
+  double high; //0 = deep ossen 1 = mounten .5 = sea leval
+  double temp; //0 = cold  1 = hot
 };
 
-
-
-char map[MAPY][MAPX+1] = {//the map
-  "XXXXXXX...XXXXXXXX........",
-  "X.....X...X......X...XXXXX",
-  "X.....XXXXX......X...X%..X",
-  "X.....+###+......XXXXX...X",
-  "X.....XXXXX......+###+...X",
-  "XXX+XXX...X......XXXXXXXXX",
-  "..X#X.....XXXXX+XX........",
-  "..X#X.......X###X.........",
-  "..X#X.......X#XXX.........",
-  ".XX+XXXXX...X#X...........",
-  ".X......XXXXX+XXXX........",
-  ".X......+###+....X........",
-  ".X......XXXXX....X........",
-  ".XXX+XXXX...X+XXXX........",
-  "....X.....................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "..........................",
-  "........XXXX+XXX..........",
-  "...........X#X............",
-  "..........XX+XXX..........",
-  "..........X....XXXXXX#X...",
-  "..........X....+######X...",
-  "..........X....XXXXXXXX...",
-  "..........X....X..........",
-  "..........X....X..........",
-  "..........X....X..........",
-  "..........XXXXXX..........",
-  };
-
-  struct obj { //entaty data
-  bool isnpc;
-  int id;
-  int x;
-  int y;
-};
-#define OBJ 20 //the entaty maz
-struct obj* mapobj[OBJ] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //pointers for the entitys
-#define ROOM 5 //room count
-int roomdata[ROOM][4] = { //the room data
-  {0 ,0 ,6 ,5 },  //test room
-  {10,0 ,17,6 },
-  {21,1 ,25,5 },
-  {12,10 ,17,13},
-  {10,21,15,28}
-  //{21,1 ,25,5 }
-};
-
-
-void fillroom(int);
-
-
-
-/******************************************************************************
-Screan layout
-1: meige
-2: map      |>inv
-3:          |
-4:          |
-5:          |
-6:          |
-7:          |
-8:          |
-9:          |
-10:         |
-11:
-12:
-13:
-14:
-15:
-16:
-17:
-18:
-19:
-20:
-21:
-
-******************************************************************************/
-
-
-void clearmap() {//reset the fog of doooooooooooooooooooomm
-  for (int y = 0;y<(MAPY);y++) {
-    for (int x = 0;x<(MAPX);x++) {
-      rendermap[y][x] = 0x20;
-    }
-    rendermap[y][MAPX] = 0x00;
-  }
-}
-
-int getRoomId(int x,int y) {
-
-  for (int i = 0;i<ROOM;i++) {//for all rooms
-  if ((roomdata[i][0]<=(x)) && (roomdata[i][1]<=(y))) {//if is in romm:
-    if ((roomdata[i][2]>=x) && (roomdata[i][3])>=y) {
-        //mvprintw(0,0,"%d",i+1);
-        return i+1; //return the roomid
-      }
-    }
-  }
-  //mvprintw(0,0,"0");
-  return 0; //if in no room then passinges
-}
-
+#define MAPY 100 //map size
+#define MAPX 100
+struct tyle map[MAPY][MAPX];
 
 void msg(const char* a) { //print a msg
+  attron(COLOR_PAIR(C_MSG));
   move(0,0);
   printw(a);
+  attroff(COLOR_PAIR(C_MSG));
 }
 
-void renderline(char*,int); //redraw a line
 
 void cleanln(int y) { //redray a line x: on screan pos
-  move(y,0);
-  if (y > 0) {
-    renderline(rendermap[y-1],y);
-  }
-
-  for (int oi=0;oi<OBJ;oi++) { //render entetys
-    if (mapobj[oi]==NULL) {} else {
-      if ((*(mapobj[oi])).y+1 == y) {
-        if (getRoomId((*(mapobj[oi])).x,(*(mapobj[oi])).y)==gRoom){
-          if ((*(mapobj[oi])).isnpc) {
-            switch ((*(mapobj[oi])).id) {
-              case 0:mvaddch(y,(*(mapobj[oi])).x,0x4d);break;
-            }
-          }
-          switch ((*(mapobj[oi])).id) {
-            case 1:mvaddch(y,(*(mapobj[oi])).x,73);break;
-            case 0:mvaddch(y,(*(mapobj[oi])).x,109);break;
-          }
-        }
-      }
-    }
-  }
-
-  if (y-1==gPlayery) {//draw player
-    mvaddch(y,gPlayerx,'@');
-  }
+  renderline(y);
 }
 
 void clearmsg() {
@@ -214,35 +51,6 @@ void clearmsg() {
   clrtoeol();
 }
 
-int addobj(struct obj* o) { //add an entey
-  for(int x = 0;x<OBJ;x++) {
-    if (mapobj[x] == NULL) {
-      mapobj[x] = o;
-      cleanln(o->y+1);
-      return x;
-    }
-  }
-
-  return -1;
-}
-
-struct obj* rmobj(int x) { //reomve an enty (not dealocate it)
-  struct obj* y = mapobj[x];
-  mapobj[x] = NULL;
-  return y;
-}
-
-bool give(int id) {
-  for (int x = 0;x<INVT;x++) {
-    //msg("iteration:give");
-    if (inv[x]==0) {
-      inv[x] = id;
-      return 0;
-    }
-  }
-
-  return 1;
-}
 
 void render() {//redray hole Screan
   for(int x = 0;x<(MAPY);x++) {
@@ -251,141 +59,21 @@ void render() {//redray hole Screan
 }
 
 void genaratemap() { //reset the map
-  for (int x = 0;x<OBJ;x++) {
-    free(mapobj[x]);
-    mapobj[x] = NULL;
-  }
-
-  struct obj* o = (struct obj*)malloc(sizeof(struct obj));
-  o->isnpc = false;
-  o->y = 2;
-  o->x = 2;
-  o->id = 1;
-
-  addobj(o);
+ for (int y = 0;y<MAPY;y++) {
+   for (int x = 0;x<MAPX;x++) {
+     map[x][y].high = 0.0f;
+   }
+ }
 }
 
-void movep(int x,int y);
 
 void restart(bool a) { //reset it all a:if tho reset inv
-  if (a) {
-    for (int x = 0;x<INVT;x++) {
-        inv[x] = 0;
-      }
-    }
-
-  gRoom = 0;
-
+ 
   genaratemap();
-  gPlayerx=13;
-  gPlayery=27;
-  clearmap();
-  fillroom(getRoomId(gPlayerx,gPlayery));
   render();
 }
 
-void fight(struct obj*);
 
-void movep(int x,int y) { //move the player
-  for (int z=0;z<OBJ;z++) {
-    if (mapobj[z] == NULL) {;} else {
-
-      if ((*(mapobj[z])).isnpc){
-        if (((*(mapobj[z])).y == y)&&((*(mapobj[z])).x == x)) {
-          fight(mapobj[z]);
-          return;
-        }
-      }else{
-        if (((*(mapobj[z])).y == y)&&((*(mapobj[z])).x == x)) {
-          switch ((*(mapobj[z])).id) {
-            case 1:if(give(1)==0){free(rmobj(z));}break;
-            case 0:break;
-          }
-        }
-      }
-    }
-  }
-
-  int oy = gPlayery;
-  if (map[y][x]=='X') {
-    cleanln(y+1);
-    return;
-  } else {
-    gPlayerx = x;
-    gPlayery = y;
-    cleanln(y+1);
-  }
-  fillroom(gRoom);
-  gRoom = getRoomId(gPlayerx,gPlayery);
-  fillroom(gRoom);
-  if (map[y][x]=='%') {
-    msg("next leaval");
-    cleanln(oy+1);
-    getch();
-    clearmsg();
-    restart(0);
-    return;
-  }
-  cleanln(y+1);
-  cleanln(oy+1);
-}
-
-void inventory() {
-  msg("you have : -more-");
-  for (int y = 0;y<INVT;y++) {
-    move(y+1,0);
-    printw("-  %d : %s  -",y,gItems[inv[y]]);
-  }
-  getch();
-  for (int y = 0;y<INVT;y++) {
-    cleanln(y+1);
-  }
-  clearmsg();
-}
-
-void drop() {
-  msg("drop what?");
-  int id = getch()-48;
-  clearmsg();
-
-  if ((id>INVT)||(id<0)) {
-    msg("that item dose not egist.");
-    return;
-  }
-
-  if (inv[id] == 0) {
-    msg("that slot is empty");
-    return;
-  }
-
-  struct obj* o = (struct obj*)malloc(sizeof(struct obj));
-  o->isnpc = false;
-  o -> x = gPlayerx;
-  o -> y = gPlayery;
-  o -> id = inv[id];
-
-  if (addobj(o)==-1) {
-    free(o);
-    return;
-  }
-
-  inv[id] = 0;
-  return;
-}
-
-void spawn(int x,int y,int id) {
-  struct obj* o = (struct obj*)malloc(sizeof(struct obj));
-  o->isnpc = true;
-  o -> x = x;
-  o -> y = y;
-  o -> id = id;
-
-  if (addobj(o)==-1) {
-    free(o);
-    return;
-  }
-
-}
 
 bool mechanics(int key) {
   clearmsg();
@@ -395,15 +83,18 @@ bool mechanics(int key) {
 
   switch (key) {
     case EXIT:return 0;
-    case INV:inventory();return 1;
-
-    case UP:movep(gPlayerx+0,gPlayery-1);return 1;
-    case DOWN:movep(gPlayerx+0,gPlayery+1);return 1;
-    case LEFT:movep(gPlayerx-1,gPlayery+0);return 1;
-    case RIGHT:movep(gPlayerx+1,gPlayery+0);return 1;
     case RESTART:restart(1);return 1;
-    case DROP:drop();return 1;
-    case DEBUG:spawn(gPlayerx,gPlayery+1,0);return 1;
+
+    case LEFT:curs_x-=1;return 1;
+    case RIGHT:curs_x+=1;return 1;
+    case UP:curs_y-=1;return 1;
+    case DOWN:curs_y+=1;return 1;
+
+    case P_LAND:map[curs_x][curs_y].high = .51f;return 1;
+    case P_WATER:map[curs_x][curs_y].high = .0f;return 1;
+    case P_LAVA:map[curs_x][curs_y].temp = 1.0f;return 1;
+
+    case DEBUG:;return 1;
   }
 
   msg("Unrecognized command.");
@@ -411,12 +102,11 @@ bool mechanics(int key) {
   return 1;
 }
 
-void ticknpc();
-
 void game() {
   bool running = true;
   int key = 0;
   initscr();
+  start_color();
   raw();
   noecho();
   curs_set(0);
@@ -427,12 +117,19 @@ void game() {
   clear();
   render();
 
+  init_pair(C_MSG, COLOR_WHITE, COLOR_BLACK);
+
+  init_pair(C_LAVA, COLOR_RED, COLOR_BLACK);
+  init_pair(C_WATER, COLOR_BLUE, COLOR_GRAYTEXT);
+  init_pair(C_GRASS, COLOR_GREEN, COLOR_BLACK);
+
+
   restart(1);
 
   while (running) {
+    render();
     key = getch();
     running = mechanics(key);
-    ticknpc();
     //cleanln(2);
     //mvprintw(1,0,"%d",getRoomId(gPlayerx,gPlayery));
     refresh();
@@ -442,75 +139,30 @@ void game() {
   refresh();
   endwin();
   clear();
-  printf("By nVoidPointer (nvoidpointer@gmail.com)\n");
+  printf("By nVoidPointer (nvoidpointer@gmail.com) (buggybugs@kitty)\n");
   return;
 }
 
-void fillroom(int room) { //fill a room room:roomid
-  int index = room - 1;
-  //mvprintw(0,0,"%d",room);
-  if (room==0) { //if it is a passing
-    rendermap[gPlayery][gPlayerx] = map[gPlayery][gPlayerx]; //the player pos
 
-    if (map[gPlayery-1][gPlayerx] == '#' || map[gPlayery-1][gPlayerx] == '+' || map[gPlayery-1][gPlayerx] == '.') {
-      rendermap[gPlayery-1][gPlayerx] = map[gPlayery-1][gPlayerx];
-    } //all agationt points
-    if (map[gPlayery+1][gPlayerx] == '#' || map[gPlayery+1][gPlayerx] == '+'|| map[gPlayery+1][gPlayerx] == '.') {
-      rendermap[gPlayery+1][gPlayerx] = map[gPlayery+1][gPlayerx];
-    }
-    if (map[gPlayery][gPlayerx+1] == '#' || map[gPlayery][gPlayerx+1] == '+' || map[gPlayery][gPlayerx+1] == '.') {
-      rendermap[gPlayery][gPlayerx+1] = map[gPlayery][gPlayerx+1];
-    }
-    if (map[gPlayery][gPlayerx-1] == '#' || map[gPlayery][gPlayerx-1] == '+' || map[gPlayery][gPlayerx-1] == '.') {
-      rendermap[gPlayery][gPlayerx-1] = map[gPlayery][gPlayerx-1];
-    }
-
-    cleanln(gPlayery+1); //redraw it all
-    cleanln(gPlayery+2);
-    cleanln(gPlayery);
-    return;
-  } else {
-
-    for (int chy = roomdata[index][1];roomdata[index][3]>=chy;chy++) { //else for all og the room
-      for (int chx = roomdata[index][0];roomdata[index][2]>=chx;chx++) {
-        if (getRoomId(chx,chy)==gRoom) {
-          rendermap[chy][chx] = map[chy][chx];
-        } else {
-          if (map[chy][chx]=='.') {
-            rendermap[chy][chx] = ' ';
-          } else {
-            rendermap[chy][chx] = map[chy][chx];
-          }
-        }
-      }
-      cleanln(chy+1); //redraw the line
-    }
-  }
-}
-
-void renderline(char* line,int y) {//render a line line: text y: pos on screan
+void renderline(int y) {//render a line line: text y: pos on screan
   //mvprintw(0,0,"%d",getRoomId(gPlayerx,gPlayery));
   move(y,0);
+  int attr = 0;
   for (int x = 0;x<MAPX;x++) {
-    mvaddch(y,x,line[x]);
-  }
-}
 
-void ticknpc() {
-  for (int iNpc = 0;iNpc<OBJ;iNpc++) {
-    if (mapobj[iNpc]==NULL) {
-
+    if ((y == curs_y)&(x == curs_x)) {
+      attr = A_BLINK;
     } else {
-      if((*(mapobj[iNpc])).isnpc) {
-        switch ((*(mapobj[iNpc])).id) {
-          case 0: break;
-        }
-      }
+      attr = A_NORMAL;
+    }
+
+    if (map[x][y].high > SEALEVAL) {
+      attr = attr | COLOR_PAIR(C_GRASS);
+      mvaddch(y,x,GRASS | attr);
+    } else {
+      attr = attr | COLOR_PAIR(C_WATER);
+      mvaddch(y,x,WATER | attr);
     }
   }
 }
 
-void fight(struct obj* npc) {
-  msg("you poke an npc");
-  return;
-}
