@@ -1,5 +1,6 @@
 #include <curses.h>
 #include <stdlib.h>
+//#define bool char
 
 void renderline(int); //redraw a line
 void movep(int x,int y);
@@ -17,22 +18,26 @@ void debug(char* a) {;}
 
 int curs_x = 1 , curs_y = 1;
 
-enum boutons {BOSS='\n',EXIT='q',UP='w',DOWN='s',RIGHT='d',LEFT='a',RESTART='r',DEBUG='`',P_LAND='x',P_WATER='z',P_LAVA='c'}; //the controls
+enum controls {BOSS='\n',EXIT='q',UP='w',DOWN='s',RIGHT='d',LEFT='a',RESTART='r',HELP='`',P_LAND='x',P_WATER='z',P_LAVA='c'}; //the controls
 
-enum colors {C_MSG,C_GRASS,C_WATER,C_LAVA};
-enum icons {GRASS='w',WATER='~'};
+enum colors {C_MSG,C_GRASS,C_WATER,C_LAVA,C_ROCK,C_SCORC};
+enum icons {CH_GRASS='w',CH_WATER='~',CH_ROCK};
+
 #define SEALEVAL 0.5f
+#define HOTTEMP 0.1f
 
 const char* gVerson = "0.8";
 
 struct tyle {
   double high; //0 = deep ossen 1 = mounten .5 = sea leval
   double temp; //0 = cold  1 = hot
+  bool isscorched;
 };
 
-#define MAPY 100 //map size
-#define MAPX 100
-struct tyle map[MAPY][MAPX];
+#define MAPY 60 //map size
+#define MAPX 60
+struct tyle **map;
+struct tyle **nmap;
 
 void msg(const char* a) { //print a msg
   attron(COLOR_PAIR(C_MSG));
@@ -43,7 +48,9 @@ void msg(const char* a) { //print a msg
 
 
 void cleanln(int y) { //redray a line x: on screan pos
-  renderline(y);
+  if (y > 0) {
+    renderline(y);
+  }
 }
 
 void clearmsg() {
@@ -53,8 +60,8 @@ void clearmsg() {
 
 
 void render() {//redray hole Screan
-  for(int x = 0;x<(MAPY);x++) {
-    cleanln(x+1);
+  for(int y = 0;y<MAPY;y++) {
+    cleanln(y+1);
   }
 }
 
@@ -62,21 +69,56 @@ void genaratemap() { //reset the map
  for (int y = 0;y<MAPY;y++) {
    for (int x = 0;x<MAPX;x++) {
      map[x][y].high = 0.0f;
+     map[x][y].temp = 0.0f;
+     map[x][y].isscorched = false;
    }
  }
 }
 
 
 void restart(bool a) { //reset it all a:if tho reset inv
- 
+
   genaratemap();
   render();
 }
+void dotyle(int x, int y,struct tyle* dest) {
+  if (map[x][y].isscorched) {
+    map[x][y].isscorched = false;
+  }
+  if (map[x][y].temp > HOTTEMP) {
+    map[x][y].isscorched = true;
+  }
+  if (y == 0 || y == (MAPY-1)) {
+    dest -> high = map[x][y].high;
+    dest -> temp = map[x][y].temp; 
+    return;
+  } 
+  if (x == 0 || x == (MAPX-1)) {
+    dest -> temp = map[x][y].temp;
+    dest -> high = map[x][y].high;
+    return;
+  } 
+  dest -> high = map[x][y].high;
+  dest -> temp = ((map[x][y+1].temp + map[x][y-1].temp + map[x+1][y].temp + map[x-0][y].temp )/4 *.1) + (map[x][y].temp *.9f);
+}
 
 
+void ticktyles() {
+  struct tyle** tmp;
+
+  for (int x = 0;x<MAPX;x++) {
+    for (int y = 0;y<MAPY;y++) {
+      dotyle(x,y,&(nmap[x][y]));
+    }
+  }
+  tmp = nmap;
+  nmap = map;
+  map = tmp;
+}
 
 bool mechanics(int key) {
   clearmsg();
+  ticktyles();
   if (map==NULL) {
     msg("WHAT!");
   }
@@ -94,7 +136,19 @@ bool mechanics(int key) {
     case P_WATER:map[curs_x][curs_y].high = .0f;return 1;
     case P_LAVA:map[curs_x][curs_y].temp = 1.0f;return 1;
 
-    case DEBUG:;return 1;
+    case HELP:
+      move(0,0);
+      printw("--help--------\n");
+      printw("-%c this help _\n",HELP);
+      printw("-w,a,s,d move cursor _\n");
+      printw("-%c place grass _\n",P_LAND);
+      printw("-%c place water _\n",P_WATER);
+      printw("-%c place LAVA _\n",P_LAVA);
+
+      printw("\n");
+      getch();
+      clearmsg();
+      return 1;
   }
 
   msg("Unrecognized command.");
@@ -104,14 +158,22 @@ bool mechanics(int key) {
 
 void game() {
   bool running = true;
+  map = malloc(MAPX*(sizeof(void*)));
+  nmap = malloc(MAPX*(sizeof(void*)));
+  for (int i = 0;i<MAPY;i++) {
+    map[i] = malloc((sizeof(struct tyle))*MAPY);
+  }
+  for (int i = 0;i<MAPY;i++) {
+    nmap[i] = malloc((sizeof(struct tyle))*MAPY);
+  }
   int key = 0;
   initscr();
   start_color();
   raw();
   noecho();
   curs_set(0);
+  printw("World sim; ` for help -more- \nVerson : %s",gVerson);
   move(0,0);
-  printw("Text only game. [by M.Z.] -more- \nVerson : %s",gVerson);
   refresh();
   getch();
   clear();
@@ -119,9 +181,11 @@ void game() {
 
   init_pair(C_MSG, COLOR_WHITE, COLOR_BLACK);
 
-  init_pair(C_LAVA, COLOR_RED, COLOR_BLACK);
-  init_pair(C_WATER, COLOR_BLUE, COLOR_GRAYTEXT);
+  init_pair(C_LAVA, COLOR_RED, COLOR_RED);
+  init_pair(C_WATER, COLOR_BLUE, COLOR_BLUE);
   init_pair(C_GRASS, COLOR_GREEN, COLOR_BLACK);
+  init_pair(C_ROCK, COLOR_WHITE, COLOR_BLACK);
+  init_pair(C_SCORC, COLOR_RED, COLOR_BLACK);
 
 
   restart(1);
@@ -140,28 +204,48 @@ void game() {
   endwin();
   clear();
   printf("By nVoidPointer (nvoidpointer@gmail.com) (buggybugs@kitty)\n");
+  for (int i = 0;i<MAPY;i++) {
+    free(map[i]);
+  }
+  for (int i = 0;i<MAPY;i++) {
+    free(nmap[i]);
+  }
   return;
 }
 
 
-void renderline(int y) {//render a line line: text y: pos on screan
+void renderline(int y) {//render a line line:: pos on screan
   //mvprintw(0,0,"%d",getRoomId(gPlayerx,gPlayery));
   move(y,0);
   int attr = 0;
   for (int x = 0;x<MAPX;x++) {
 
-    if ((y == curs_y)&(x == curs_x)) {
+    if ((y-1 == curs_y)&(x == curs_x)) {
       attr = A_BLINK;
     } else {
       attr = A_NORMAL;
     }
 
-    if (map[x][y].high > SEALEVAL) {
-      attr = attr | COLOR_PAIR(C_GRASS);
-      mvaddch(y,x,GRASS | attr);
+    if (map[x][y-1].high > SEALEVAL) {
+
+      if (map[x][y-1].temp>HOTTEMP) {
+        attr = attr | COLOR_PAIR(C_LAVA);
+      } else { 
+        if (map[x][y-1].isscorched) {
+          attr = attr | COLOR_PAIR(C_SCORC);
+        } else {
+          attr = attr | COLOR_PAIR(C_GRASS);
+        }
+      }
+
+      mvaddch(y,x,CH_GRASS | attr);
     } else {
-      attr = attr | COLOR_PAIR(C_WATER);
-      mvaddch(y,x,WATER | attr);
+      if (map[x][y-1].temp>HOTTEMP) {
+        attr = attr | COLOR_PAIR(C_ROCK);
+      } else {
+        attr = attr | COLOR_PAIR(C_WATER);
+      }
+      mvaddch(y,x,CH_WATER | attr);
     }
   }
 }
