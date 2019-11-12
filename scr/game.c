@@ -1,5 +1,10 @@
 #include <curses.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+
+//#include <pthread.h> 
+
 //#define bool char
 
 void renderline(int); //redraw a line
@@ -34,7 +39,7 @@ struct tyle {
   bool isscorched;
 };
 
-#define MAPY 60 //map size
+#define MAPY 30 //map size
 #define MAPX 60
 struct tyle **map;
 struct tyle **nmap;
@@ -115,15 +120,22 @@ void ticktyles() {
   nmap = map;
   map = tmp;
 }
-
+int last;
 bool mechanics(int key) {
   clearmsg();
-  ticktyles();
+  if ((last+(CLOCKS_PER_SEC/2))<(clock())) {
+    last = clock();
+    ticktyles();
+    refresh();
+  }
+  //ticktyles();
   if (map==NULL) {
     msg("WHAT!");
   }
 
   switch (key) {
+    case 0 :return 1;
+
     case EXIT:return 0;
     case RESTART:restart(1);return 1;
 
@@ -138,15 +150,18 @@ bool mechanics(int key) {
 
     case HELP:
       move(0,0);
-      printw("--help--------\n");
-      printw("-%c this help _\n",HELP);
-      printw("-w,a,s,d move cursor _\n");
-      printw("-%c place grass _\n",P_LAND);
-      printw("-%c place water _\n",P_WATER);
-      printw("-%c place LAVA _\n",P_LAVA);
+      printw(".-help---------------,\n");
+      printw("|%c this help         |\n",HELP);
+      printw("|w,a,s,d move cursor |\n");
+      printw("|%c place grass       |\n",P_LAND);
+      printw("|%c place water       |\n",P_WATER);
+      printw("|%c place LAVA        |\n",P_LAVA);
+      printw("`--------------------'\n");
 
       printw("\n");
+      nodelay(stdscr,false);
       getch();
+      nodelay(stdscr,false);
       clearmsg();
       return 1;
   }
@@ -160,13 +175,14 @@ void game() {
   bool running = true;
   map = malloc(MAPX*(sizeof(void*)));
   nmap = malloc(MAPX*(sizeof(void*)));
-  for (int i = 0;i<MAPY;i++) {
+  for (int i = 0;i<MAPX;i++) {
     map[i] = malloc((sizeof(struct tyle))*MAPY);
   }
-  for (int i = 0;i<MAPY;i++) {
+  for (int i = 0;i<MAPX;i++) {
     nmap[i] = malloc((sizeof(struct tyle))*MAPY);
   }
   int key = 0;
+  last = clock();
   initscr();
   start_color();
   raw();
@@ -177,7 +193,9 @@ void game() {
   refresh();
   getch();
   clear();
+  nodelay(stdscr, TRUE);
   render();
+
 
   init_pair(C_MSG, COLOR_WHITE, COLOR_BLACK);
 
@@ -204,10 +222,10 @@ void game() {
   endwin();
   clear();
   printf("By nVoidPointer (nvoidpointer@gmail.com) (buggybugs@kitty)\n");
-  for (int i = 0;i<MAPY;i++) {
+  for (int i = 0;i<MAPX;i++) {
     free(map[i]);
   }
-  for (int i = 0;i<MAPY;i++) {
+  for (int i = 0;i<MAPX;i++) {
     free(nmap[i]);
   }
   return;
@@ -241,7 +259,7 @@ void renderline(int y) {//render a line line:: pos on screan
       mvaddch(y,x,CH_GRASS | attr);
     } else {
       if (map[x][y-1].temp>HOTTEMP) {
-        attr = attr | COLOR_PAIR(C_ROCK);
+        attr = attr | COLOR_PAIR(C_SCORC);
       } else {
         attr = attr | COLOR_PAIR(C_WATER);
       }
