@@ -26,7 +26,7 @@ int curs_x = 1 , curs_y = 1;
 enum controls {BOSS='\n',EXIT='q',UP='w',DOWN='s',RIGHT='d',LEFT='a',RESTART='r',HELP='`',P_LAND='x',P_WATER='z',P_LAVA='c'}; //the controls
 
 enum colors {C_MSG,C_GRASS,C_WATER,C_LAVA,C_ROCK,C_SCORC};
-enum icons {CH_GRASS='w',CH_WATER='~',CH_ROCK};
+enum icons {CH_GRASS='w',CH_WATER='X',CH_ROCK};
 
 #define SEALEVAL 0.5f
 #define HOTTEMP 0.1f
@@ -39,7 +39,7 @@ struct tyle {
   bool isscorched;
 };
 
-#define MAPY 30 //map size
+#define MAPY 20 //map size
 #define MAPX 60
 struct tyle **map;
 struct tyle **nmap;
@@ -104,7 +104,7 @@ void dotyle(int x, int y,struct tyle* dest) {
     return;
   } 
   dest -> high = map[x][y].high;
-  dest -> temp = ((map[x][y+1].temp + map[x][y-1].temp + map[x+1][y].temp + map[x-0][y].temp )/4 *.1) + (map[x][y].temp *.9f);
+  dest -> temp = ((map[x][y+1].temp + map[x][y-1].temp + map[x+1][y].temp + map[x-1][y].temp )/4 *.1) + (map[x][y].temp *.9f);
 }
 
 
@@ -122,10 +122,10 @@ void ticktyles() {
 }
 int last;
 bool mechanics(int key) {
-  clearmsg();
   if ((last+(CLOCKS_PER_SEC/2))<(clock())) {
     last = clock();
     ticktyles();
+    render();
     refresh();
   }
   //ticktyles();
@@ -166,7 +166,8 @@ bool mechanics(int key) {
       return 1;
   }
 
-  msg("Unrecognized command.");
+  //msg("Unrecognized command.");
+
   mvprintw(20,0,"%d",key);
   return 1;
 }
@@ -193,7 +194,7 @@ void game() {
   refresh();
   getch();
   clear();
-  nodelay(stdscr, TRUE);
+  nodelay(stdscr , TRUE);
   render();
 
 
