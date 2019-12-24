@@ -1,0 +1,7 @@
+this is a dock on the usige and nestings of tags u rwraperd entrys are top leval tags
+
+[config:
+ the main config ar data/config(hard coded)
+ [raw+(str):a raw file to be pharsed oredred in oreder in file]
+ [savefile(str): the path for game saves]
+]

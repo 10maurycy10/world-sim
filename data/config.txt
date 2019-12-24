@@ -1,1 +1,2 @@
-savefile: "./saves/savefile.dat"
+[savefile:"./data/saves/savefile.dat"]
+[raw:"./data/raw"]

@@ -1,14 +1,12 @@
 #include <curses.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <time.h>
-#include <SDL.h>
+#include <SDL_main.h>
+#include "config.c"
 
-//#include <pthread.h> 
-
+//#include <pthread.h>
 //#define bool char
 
-#include "config.c"
 
 void renderline(int); //redraw a line
 void movep(int x,int y);
@@ -165,7 +163,7 @@ bool mechanics(int key) {
 void game(SDL_RWops* configfile) {
   bool running = true;
   struct config config;
-  readconfig(configfile,config);
+  readconfig(configfile,&config);
   map = malloc(MAPX*(sizeof(void*)));
   nmap = malloc(MAPX*(sizeof(void*)));
   for (int i = 0;i<MAPX;i++) {
@@ -176,7 +174,7 @@ void game(SDL_RWops* configfile) {
   }
   int key = 0;
   last = clock();
-  initscr();
+  /*initscr();
   start_color();
   raw();
   noecho();
@@ -221,6 +219,7 @@ void game(SDL_RWops* configfile) {
   for (int i = 0;i<MAPX;i++) {
     free(nmap[i]);
   }
+  */
   return;
 }
 
