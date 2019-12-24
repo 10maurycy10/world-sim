@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <windows.h>
 #include <unistd.h>
 #include "game.c"
-int WINAPI WinMain (HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow) {
-    game();
+int main () {
+    SDL_RWops* config = SDL_RWFromFile( "./data/config.txt", "r+b" );
+    game(config);
     return 0;
 }

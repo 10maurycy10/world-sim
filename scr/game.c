@@ -2,10 +2,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <SDL.h>
 
 //#include <pthread.h> 
 
 //#define bool char
+
+#include "config.c"
 
 void renderline(int); //redraw a line
 void movep(int x,int y);
@@ -36,7 +39,7 @@ const char* gVerson = "0.8";
 struct tyle {
   double high; //0 = deep ossen 1 = mounten .5 = sea leval
   double temp; //0 = cold  1 = hot
-  bool isscorched;
+  int isrock;
 };
 
 #define MAPY 20 //map size
@@ -75,7 +78,7 @@ void genaratemap() { //reset the map
    for (int x = 0;x<MAPX;x++) {
      map[x][y].high = 0.0f;
      map[x][y].temp = 0.0f;
-     map[x][y].isscorched = false;
+     map[x][y].isrock = false;
    }
  }
 }
@@ -87,11 +90,11 @@ void restart(bool a) { //reset it all a:if tho reset inv
   render();
 }
 void dotyle(int x, int y,struct tyle* dest) {
-  if (map[x][y].isscorched) {
-    map[x][y].isscorched = false;
+  if (map[x][y].isrock) {
+    map[x][y].isrock -= 1;
   }
   if (map[x][y].temp > HOTTEMP) {
-    map[x][y].isscorched = true;
+    map[x][y].isrock = 10   ;
   }
   if (y == 0 || y == (MAPY-1)) {
     dest -> high = map[x][y].high;
@@ -103,6 +106,8 @@ void dotyle(int x, int y,struct tyle* dest) {
     dest -> high = map[x][y].high;
     return;
   } 
+
+  dest -> isrock = map[x][y].isrock;
   dest -> high = map[x][y].high;
   dest -> temp = ((map[x][y+1].temp + map[x][y-1].temp + map[x+1][y].temp + map[x-1][y].temp )/4 *.1) + (map[x][y].temp *.9f);
 }
@@ -144,26 +149,11 @@ bool mechanics(int key) {
     case UP:curs_y-=1;return 1;
     case DOWN:curs_y+=1;return 1;
 
-    case P_LAND:map[curs_x][curs_y].high = .51f;return 1;
-    case P_WATER:map[curs_x][curs_y].high = .0f;return 1;
-    case P_LAVA:map[curs_x][curs_y].temp = 1.0f;return 1;
+    case P_LAND:map[curs_x][curs_y].high = .51f;map[curs_x][curs_y].isrock = false;map[curs_x][curs_y].temp = 0.0f;return 1;
+    case P_WATER:map[curs_x][curs_y].high = .0f;map[curs_x][curs_y].isrock = false;map[curs_x][curs_y].temp = 0.0f;return 1;
+    case P_LAVA:map[curs_x][curs_y].temp = 1.0f;map[curs_x][curs_y].isrock = true;return 1;
 
-    case HELP:
-      move(0,0);
-      printw(".-help---------------,\n");
-      printw("|%c this help         |\n",HELP);
-      printw("|w,a,s,d move cursor |\n");
-      printw("|%c place grass       |\n",P_LAND);
-      printw("|%c place water       |\n",P_WATER);
-      printw("|%c place LAVA        |\n",P_LAVA);
-      printw("`--------------------'\n");
-
-      printw("\n");
-      nodelay(stdscr,false);
-      getch();
-      nodelay(stdscr,false);
-      clearmsg();
-      return 1;
+    case HELP:;
   }
 
   //msg("Unrecognized command.");
@@ -172,8 +162,10 @@ bool mechanics(int key) {
   return 1;
 }
 
-void game() {
+void game(SDL_RWops* configfile) {
   bool running = true;
+  struct config config;
+  readconfig(configfile,config);
   map = malloc(MAPX*(sizeof(void*)));
   nmap = malloc(MAPX*(sizeof(void*)));
   for (int i = 0;i<MAPX;i++) {
@@ -250,8 +242,8 @@ void renderline(int y) {//render a line line:: pos on screan
       if (map[x][y-1].temp>HOTTEMP) {
         attr = attr | COLOR_PAIR(C_LAVA);
       } else { 
-        if (map[x][y-1].isscorched) {
-          attr = attr | COLOR_PAIR(C_SCORC);
+        if (map[x][y-1].isrock) {
+          attr = attr | COLOR_PAIR(C_ROCK);
         } else {
           attr = attr | COLOR_PAIR(C_GRASS);
         }
@@ -260,7 +252,7 @@ void renderline(int y) {//render a line line:: pos on screan
       mvaddch(y,x,CH_GRASS | attr);
     } else {
       if (map[x][y-1].temp>HOTTEMP) {
-        attr = attr | COLOR_PAIR(C_SCORC);
+        attr = attr | COLOR_PAIR(C_ROCK);
       } else {
         attr = attr | COLOR_PAIR(C_WATER);
       }
