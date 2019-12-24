@@ -2,6 +2,7 @@
 
 struct config{
     SDL_RWops* savefile;
+    SDL_RWops* rawfile;
 };
 
 void skipcoments(SDL_RWops *file, int *ip) {
@@ -53,21 +54,30 @@ bool stringmatch(char* str ,SDL_RWops* file , int* ip) {
     return 1;
 }
 
-void readconfig(SDL_RWops* file, struct config* configstruct) {
+void readconfig(SDL_RWops* file, struct config *configstruct) {
     int i = 0;
     char* str;
-    skipcoments(file,&i);
-    if (stringmatch("[savefile:",file,&i)) {
-        str = getstrtag(file,&i);
-        printf("savefile: %s \n",str);
-        configstruct -> savefile=SDL_RWFromFile(str , "r+b" );
-        free(str);
-    } else {
-        if (stringmatch("[raw:",file,&i)) {
-
+    char inch;
+    while(0!=(SDL_RWread(file,&inch,1,1))) {
+        SDL_RWseek(file,i,0);
+        if (stringmatch("[savefile:",file,&i)) {
+            str = getstrtag(file,&i);
+            printf("savefile: %s \n",str);
+            configstruct -> savefile=SDL_RWFromFile(str , "r+b" );
+            free(str);
+            i++;
         } else {
-            configerror("bad entry in config file.\n");
+            if (stringmatch("[raw:",file,&i)) {
+                str = getstrtag(file,&i);
+                printf("rawfile: %s \n",str);
+                configstruct -> rawfile=SDL_RWFromFile(str , "r+b" );
+                free(str);
+                i++;
+            } else {
+                configerror("bad entry in config file.\n");
+            }
         }
+        i++;
     }
 };
 
