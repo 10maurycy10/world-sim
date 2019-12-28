@@ -5,79 +5,85 @@ struct config{
     SDL_RWops* rawfile;
 };
 
-void skipcoments(SDL_RWops *file, int *ip) {
-    SDL_RWseek(file,*ip,0);
-    //SDL_RWread (SDL_RWops *context, void *ptr, size_t size, size_t maxnum)
-}
 
 void configerror(char* test) {
     printf(test);
     _Exit(1);
 }
 
-char* getstrtag(SDL_RWops* file,int* ip) {//gets a string and malock() it
+char* getstrtag(char* file,int* ip , int size) {//gets a string and malock() it
     int size=0;
-    int i = 0;
     char* string;
     char inch = 0;
-    SDL_RWseek(file,*ip,0);
-    if (SDL_RWread(file,&inch,1,1)==0 || inch!='"') {configerror("bad str");}
-    //get strlen
-    while (SDL_RWread(file,&inch,1,1)==1 && inch!='"') {size++;}
+    int i = 0;
+
+    if (*ip>size) {configerror("bad str");}//get strlen
+    if (file[*ip]!='"') {configerror("bad str no open '\"' ");}
+
+    while (*ip<size) {
+        if(file[*ip]='"') {break;}
+        size++;
+    }
+
     string = (char*)malloc(size+1);
+
     SDL_RWseek(file,*ip,0);
-    SDL_RWread(file,&inch,1,1);//skip past starting qouts
-    printf("size : %x\n",size);
+
+    SDL_RWread(file,&inch,1,1);
     while (i<size) {
         SDL_RWread(file,&inch,1,1);
-        printf("read : %c\n",inch);
         string[i]=inch;
+        *ip++;
         i++;
+
     }
-    string[size]=0;
-    return(string);
+    string[size]=0x00;//null pad
+    return(string); //return matched string
 }
 
-bool stringmatch(char* str ,SDL_RWops* file , int* ip) {
-    SDL_RWseek(file,*ip,0);
+bool stringmatch(char* file , int* ip , char* str , int size) {
     int i = 0;
     char inch;
     while(str[i]) {//for all of instr
-        if (SDL_RWread(file,&inch,1,1)==0 || inch!=str[i]){ //is EOF or not match
-            SDL_RWseek(file,0,*ip);
+        if (){ //is EOF or not match
             return 1;
         }
-        printf("checked %d %c \n",i+*ip,inch);
         i++;
     }
-    *ip = i;
+    *ip = i + *ip;
     return 1;
+}
+
+void skipcoments(char* file , int* ip , int size) {
+    while(*ip < size) {//read untill [ or ]
+        if (file[*ip]=='[' || file[*ip]=='"' || file[*ip]==']') {break;}
+        (*ip)++;
+    }
 }
 
 void readconfig(SDL_RWops* file, struct config *configstruct) {
     int i = 0;
-    char* str;
-    char inch;
-    while(0!=(SDL_RWread(file,&inch,1,1))) {
-        SDL_RWseek(file,i,0);
-        if (stringmatch("[savefile:",file,&i)) {
-            str = getstrtag(file,&i);
-            printf("savefile: %s \n",str);
-            configstruct -> savefile=SDL_RWFromFile(str , "r+b" );
-            free(str);
-            i++;
-        } else {
-            if (stringmatch("[raw:",file,&i)) {
-                str = getstrtag(file,&i);
-                printf("rawfile: %s \n",str);
-                configstruct -> rawfile=SDL_RWFromFile(str , "r+b" );
-                free(str);
-                i++;
-            } else {
-                configerror("bad entry in config file.\n");
+    int size = -1;
+    char* strp;
+    char* buffer = NULL;
+    buffer = mallock(size = (file -> size(file))); //allock buffer and save size in size
+
+    while ((SDL_RWread(file,buffer[i],1,1))) {i++;}//read file into mem *buffer
+
+    i = 0;
+    while(i<size) {
+        if (stringmatch(buffer[i],"[savefile")) {
+            skipcoments(buffer,&i);
+        } else{
+            if (stringmatch(buffer,&i,"[raw")) {
+                skipcoments(buffer,&i);
+            } else{
+                config("bad entry");
             }
         }
-        i++;
     }
+
+
+    free(buffer);
 };
 
