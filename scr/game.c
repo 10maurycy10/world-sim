@@ -162,7 +162,7 @@ bool mechanics(int key) {
 
 void game(SDL_RWops* configfile) {
   bool running = true;
-  struct config config;
+  struct Config config;
   readconfig(configfile,&config);
   map = malloc(MAPX*(sizeof(void*)));
   nmap = malloc(MAPX*(sizeof(void*)));

@@ -1,6 +1,6 @@
 #include <SDL.h>
 
-struct config{
+struct Config {
     SDL_RWops* savefile;
     SDL_RWops* rawfile;
 };
@@ -12,45 +12,45 @@ void configerror(char* test) {
 }
 
 char* getstrtag(char* file,int* ip , int size) {//gets a string and malock() it
-    int size=0;
+    int strsize = 0;
     char* string;
-    char inch = 0;
     int i = 0;
 
     if (*ip>size) {configerror("bad str");}//get strlen
-    if (file[*ip]!='"') {configerror("bad str no open '\"' ");}
-
-    while (*ip<size) {
-        if(file[*ip]='"') {break;}
-        size++;
+    if ((file[*ip])!='"') {
+        configerror("bad str no open '\"' ");
     }
 
-    string = (char*)malloc(size+1);
+    while (*ip<size) {
+        if(file[*ip]!='"') {break;}
+        strsize++;
+    }
 
-    SDL_RWseek(file,*ip,0);
+    string = (char*)malloc(strsize+1);
 
-    SDL_RWread(file,&inch,1,1);
-    while (i<size) {
-        SDL_RWread(file,&inch,1,1);
-        string[i]=inch;
-        *ip++;
+    while (i<strsize) {
+        string[i]=file[i+*ip];
+        (*ip)++;
         i++;
 
     }
-    string[size]=0x00;//null pad
+    (*ip)++;
+    string[strsize]=0x00;//null pad
     return(string); //return matched string
 }
 
 bool stringmatch(char* file , int* ip , char* str , int size) {
     int i = 0;
-    char inch;
+    printf("config.strmatch: maching : \"%s\" , i: %d\n" , str , *ip);
     while(str[i]) {//for all of instr
-        if (){ //is EOF or not match
-            return 1;
+        if (*ip > size) {
+            return 0;
         }
+        if (file[*ip + i] != str[i]) {return 0;}
         i++;
     }
-    *ip = i + *ip;
+    *ip+= i + 1;
+    printf("config.strmatch: mached : \"%s\" , i: %d\n" , str , *ip);
     return 1;
 }
 
@@ -61,24 +61,26 @@ void skipcoments(char* file , int* ip , int size) {
     }
 }
 
-void readconfig(SDL_RWops* file, struct config *configstruct) {
+void readconfig(SDL_RWops* file, struct Config *configstruct) {
     int i = 0;
     int size = -1;
-    char* strp;
+    char* strp = NULL;
     char* buffer = NULL;
-    buffer = mallock(size = (file -> size(file))); //allock buffer and save size in size
+    buffer = malloc(1 + (size = (file -> size(file)))); //allock buffer and save size in size
+    buffer[size] = 0x00;
 
-    while ((SDL_RWread(file,buffer[i],1,1))) {i++;}//read file into mem *buffer
-
+    while ((SDL_RWread(file,&buffer[i],1,1))) {i++;}//read file into mem *buffer
+    printf("savebuffer: %s\n",buffer);
     i = 0;
     while(i<size) {
-        if (stringmatch(buffer[i],"[savefile")) {
-            skipcoments(buffer,&i);
+        if (stringmatch(buffer, &i,"[savefile", size)) {
+            skipcoments(buffer,&i,size);
+            printf("config.readconfig.savefileread: i : %d , curch: %c \n",i,buffer[i]);
         } else{
-            if (stringmatch(buffer,&i,"[raw")) {
-                skipcoments(buffer,&i);
+            if (stringmatch(buffer,&i,"[raw", size)) {
+                skipcoments(buffer,&i,size);
             } else{
-                config("bad entry");
+                configerror("bad entry");
             }
         }
     }
