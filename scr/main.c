@@ -3,7 +3,25 @@
 #define SDL_MAIN_HANDLED
 #include "game.c"
 int main (int argc, char *argv[]) {
-    SDL_RWops* config = SDL_RWFromFile( "./data/config.txt", "r+b" );
+    int i = 0;
+    char* cfile = "data/config.txt";
+    if ((i + 1 ) < argc) {
+        if (argv[i+1][0]=='-' && argv[i+1][1]=='c') {
+            cfile = argv[i+2];
+            i++;
+            i++;
+        } else {
+            if (argv[i+1][0]=='-' && argv[i+1][1]=='c') {
+                cfile = argv[i+2];
+                i++;
+                i++;
+            }
+        }
+
+    }
+    argv[0] = "STAWS by BuggyBug";
+    SDL_RWops* config = SDL_RWFromFile( cfile, "r+b" );
     game(config);
     return 0;
+    
 }

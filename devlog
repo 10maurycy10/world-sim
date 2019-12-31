@@ -4,9 +4,10 @@
     phaser for config reworked , working on numeric phrasing.
     Aded raw file entrees :
         MSPT //ms per tick
-        StoneMelt //curantly nonfunctanal!
-        Seleval //the sea leval curantly nonfunctanal!
+        StoneMelt //currently nonfunctional!
+        Sealeval //the sea level currently nonfunctional!
         Grassregrow //the time (ticks) that it takes for grass to regrow
         placelavatemp // the temp of placed lava
-    still need to work on float phrasing. ints done;
+    still need to work on float phrasing. int's done;
     V.0.9!!!
+    added -c option changes config file locations for modding or multiple preferences

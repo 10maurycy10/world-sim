@@ -41,7 +41,7 @@ int long readint(char* file,int* i,int size,int min,int max) {
         switch (file[*i]){ //code rep...
             case '0':val=(0+val*10);
                 break;
-            case '1':val=(1+val*10);
+            case '1':val=(1+val*10); 
                 break;
             case '2':val=(2+val*10);
                 break;
