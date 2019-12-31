@@ -3,6 +3,7 @@
 #include <time.h>
 #include <SDL_main.h>
 #include "config.c"
+#include "raw.c"
 
 //#include <pthread.h>
 //#define bool char
@@ -29,7 +30,7 @@ enum controls {BOSS='\n',EXIT='q',UP='w',DOWN='s',RIGHT='d',LEFT='a',RESTART='r'
 enum colors {C_MSG,C_GRASS,C_WATER,C_LAVA,C_ROCK,C_SCORC};
 enum icons {CH_GRASS='w',CH_WATER='X',CH_ROCK};
 
-#define SEALEVAL 0.5f
+#define SEALEVAL 0.5f // TURN INTO RAWFILE ENTRYS
 #define HOTTEMP 0.1f
 
 const char* gVerson = "0.8";
@@ -162,8 +163,10 @@ bool mechanics(int key) {
 
 void game(SDL_RWops* configfile) {
   bool running = true;
-  struct Config config;
+  struct Config config;  
+  struct Raw rawdata;
   readconfig(configfile,&config);
+  readraw(config.rawfile,&rawdata);
   map = malloc(MAPX*(sizeof(void*)));
   nmap = malloc(MAPX*(sizeof(void*)));
   for (int i = 0;i<MAPX;i++) {
@@ -174,7 +177,7 @@ void game(SDL_RWops* configfile) {
   }
   int key = 0;
   last = clock();
-  /*initscr();
+  initscr();
   start_color();
   raw();
   noecho();
@@ -219,7 +222,6 @@ void game(SDL_RWops* configfile) {
   for (int i = 0;i<MAPX;i++) {
     free(nmap[i]);
   }
-  */
   return;
 }
 
