@@ -23,6 +23,15 @@ void debug(char* a) {
 void debug(char* a) {;}
 #endif
 
+double sealeval; //todo add more
+double lavatemp;
+int grasregrow;
+int MSPT;
+int lavaPlaceTemp;
+
+
+
+
 int curs_x = 1 , curs_y = 1;
 
 enum controls {BOSS='\n',EXIT='q',UP='w',DOWN='s',RIGHT='d',LEFT='a',RESTART='r',HELP='`',P_LAND='x',P_WATER='z',P_LAVA='c'}; //the controls
@@ -30,10 +39,10 @@ enum controls {BOSS='\n',EXIT='q',UP='w',DOWN='s',RIGHT='d',LEFT='a',RESTART='r'
 enum colors {C_MSG,C_GRASS,C_WATER,C_LAVA,C_ROCK,C_SCORC};
 enum icons {CH_GRASS='w',CH_WATER='X',CH_ROCK};
 
-#define SEALEVAL 0.5f // TURN INTO RAWFILE ENTRYS
-#define HOTTEMP 0.1f
+#define SEALEVAL sealeval // TURN INTO RAWFILE ENTRYS
+#define HOTTEMP lavatemp
 
-const char* gVerson = "0.8";
+const char* gVerson = "0.9";
 
 struct tyle {
   double high; //0 = deep ossen 1 = mounten .5 = sea leval
@@ -93,7 +102,7 @@ void dotyle(int x, int y,struct tyle* dest) {
     map[x][y].isrock -= 1;
   }
   if (map[x][y].temp > HOTTEMP) {
-    map[x][y].isrock = 10   ;
+    map[x][y].isrock = grasregrow;
   }
   if (y == 0 || y == (MAPY-1)) {
     dest -> high = map[x][y].high;
@@ -125,8 +134,19 @@ void ticktyles() {
   map = tmp;
 }
 int last;
+
+void loadObj(struct Raw* data) {
+  sealeval = data -> seaLeval;
+  lavatemp = data -> stoneMelt;
+  grasregrow = data -> grassRegrow;
+  lavaPlaceTemp = data -> lava;
+  lavatemp = .25;
+  sealeval = .5;
+  MSPT = data -> MSPT;
+}
+
 bool mechanics(int key) {
-  if ((last+(CLOCKS_PER_SEC/2))<(clock())) {
+  if ((last+((CLOCKS_PER_SEC/1000)*MSPT))<(clock())) {
     last = clock();
     ticktyles();
     render();
@@ -150,7 +170,7 @@ bool mechanics(int key) {
 
     case P_LAND:map[curs_x][curs_y].high = .51f;map[curs_x][curs_y].isrock = false;map[curs_x][curs_y].temp = 0.0f;return 1;
     case P_WATER:map[curs_x][curs_y].high = .0f;map[curs_x][curs_y].isrock = false;map[curs_x][curs_y].temp = 0.0f;return 1;
-    case P_LAVA:map[curs_x][curs_y].temp = 1.0f;map[curs_x][curs_y].isrock = true;return 1;
+    case P_LAVA:map[curs_x][curs_y].temp = lavaPlaceTemp;map[curs_x][curs_y].isrock = true;return 1;
 
     case HELP:;
   }
@@ -163,10 +183,11 @@ bool mechanics(int key) {
 
 void game(SDL_RWops* configfile) {
   bool running = true;
-  struct Config config;  
+  struct Config config;
   struct Raw rawdata;
   readconfig(configfile,&config);
   readraw(config.rawfile,&rawdata);
+  loadObj(&rawdata);
   map = malloc(MAPX*(sizeof(void*)));
   nmap = malloc(MAPX*(sizeof(void*)));
   for (int i = 0;i<MAPX;i++) {

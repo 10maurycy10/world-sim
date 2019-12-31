@@ -1,0 +1,12 @@
+[30,12,2019] : fixed config file phrasing
+    started work on raw phrasing
+[30,12,2019] :
+    phaser for config reworked , working on numeric phrasing.
+    Aded raw file entrees :
+        MSPT //ms per tick
+        StoneMelt //curantly nonfunctanal!
+        Seleval //the sea leval curantly nonfunctanal!
+        Grassregrow //the time (ticks) that it takes for grass to regrow
+        placelavatemp // the temp of placed lava
+    still need to work on float phrasing. ints done;
+    V.0.9!!!

@@ -1,1 +1,2 @@
-[savefile : "./data/saves/savefile.dat" ] [raw : "./data/raw" ]
+[savefile : "data/saves/savefile.dat" ]
+[raw : "data/raw.txt" ]
