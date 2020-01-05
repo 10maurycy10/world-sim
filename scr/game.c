@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <SDL_main.h>
+
+char* rfile;
+
 #include "config.c"
 #include "raw.c"
 
@@ -181,8 +184,10 @@ bool mechanics(int key) {
   return 1;
 }
 
-void game(SDL_RWops* configfile) {
+
+void game(SDL_RWops* configfile , char* rawfile) {
   bool running = true;
+  rfile = rawfile;
   struct Config config;
   struct Raw rawdata;
   readconfig(configfile,&config);
