@@ -1,3 +1,0 @@
-[savefile : "data/saves/savefile.dat" ]
-a faster tick speed
-[raw : "data/rawfasttick.txt" ]

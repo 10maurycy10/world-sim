@@ -1,5 +1,7 @@
 bin/
-settings/
+data/*.mod
+data/saves/*
+#binarys moded files and saves
 
 # Executables
 *.exe

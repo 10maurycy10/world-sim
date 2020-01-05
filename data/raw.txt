@@ -1,5 +1,5 @@
 [grassRegrow :9999]
 [stoneMelt : ]
 [seaLeval : ]
-[MSPT : 200]
+[MSPT : 200] //5 tps
 [placelavatemp : 3]
