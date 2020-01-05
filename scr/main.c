@@ -11,8 +11,8 @@ int main (int argc, char *argv[]) {
             i++;
             i++;
         } else {
-            if (argv[i+1][0]=='-' && argv[i+1][1]=='c') {
-                cfile = argv[i+2];
+            if (argv[i+1][0]=='-' && argv[i+1][1]=='s') {
+                //cfile = argv[i+2];
                 i++;
                 i++;
             }
