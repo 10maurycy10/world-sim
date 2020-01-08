@@ -164,8 +164,8 @@ void readconfig(SDL_RWops* file, struct Config *configstruct) {
                 skipcoments(buffer,&i,size);
                     strp = getstrtag(buffer,&i,size);
                     printf("rawfile: %s\n",strp);
-                    if (rfile) {
-                        configstruct -> rawfile = SDL_RWFromFile(rfile, "r+b" );
+                    if (gRFile) {
+                        configstruct -> rawfile = SDL_RWFromFile(gRFile, "r+b" );
                     } {
                          configstruct -> rawfile = SDL_RWFromFile(strp, "r+b" );
                     }

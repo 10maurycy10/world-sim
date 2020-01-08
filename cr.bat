@@ -1,2 +1,1 @@
-.\comp
-.\run
+comp && start run

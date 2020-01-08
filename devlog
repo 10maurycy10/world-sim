@@ -13,3 +13,5 @@
     added -c option changes config file locations for modding or multiple preferences
 [4.1.2020]
  -r for raw file
+[4.7.2020]
+  working on fixing renderer
