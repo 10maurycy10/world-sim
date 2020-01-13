@@ -1,10 +1,3 @@
-struct Raw {
-    double stoneMelt; //normlized temp
-    int grassRegrow; //time
-    double seaLeval; //normlized elivatin
-    int MSPT; //mili secons per tick
-    int lava;
-};
 
 void readraw(SDL_RWops* file ,struct Raw* raw) {
     int i = 0;

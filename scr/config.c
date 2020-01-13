@@ -166,7 +166,7 @@ void readconfig(SDL_RWops* file, struct Config *configstruct) {
                     printf("rawfile: %s\n",strp);
                     if (gRFile) {
                         configstruct -> rawfile = SDL_RWFromFile(gRFile, "r+b" );
-                    } {
+                    } else {
                          configstruct -> rawfile = SDL_RWFromFile(strp, "r+b" );
                     }
 
