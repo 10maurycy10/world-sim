@@ -7,7 +7,8 @@ struct Config {
 
 
 void configerror(char* test) {
-    printf(test);
+    attrset(COLOR_PAIR(C_FAIL));
+    printw(test);
     _Exit(1);
 }
 

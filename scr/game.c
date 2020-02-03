@@ -6,12 +6,15 @@
 #include <SDL.h>
 #include <curses.h>
 #include <math.h>
+#include "font.c"
 
 struct Tyle {
   double elivation; //0 = deep ossen 1 = mounten .5 = sea leval
   double temperature; //0 = cold  1 = hot
   int64_t type;
 };
+
+enum colors {C_TEXT,C_OK,C_FAIL,C_HIGH,C_GRASS,C_STONE,C_MAGMA,C_WATER};
 
 #include "env.h"
 int64_t cursorX = 1 , cursorY = 1;
@@ -60,24 +63,41 @@ void game(SDL_RWops* configfile) {
   struct Config dataconfig;
   struct Raw rawdata;
 
-  printf("*loading data");
+  F_init();
+
+  init_pair(C_TEXT, COLOR_WHITE, COLOR_BLACK);
+
+  init_pair(C_OK, COLOR_GREEN, COLOR_BLACK);
+  init_pair(C_FAIL, COLOR_RED, COLOR_BLACK);
+
+  init_pair(C_HIGH, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(C_WATER, COLOR_BLUE, COLOR_BLACK);
+  init_pair(C_MAGMA, COLOR_RED, COLOR_BLACK);
+  init_pair(C_GRASS, COLOR_GREEN, COLOR_BLACK);
+  init_pair(C_STONE, COLOR_WHITE, COLOR_BLACK);
+
+  attrset(COLOR_PAIR(C_TEXT));
+  printw("[*] loading data");
   readconfig(configfile,&dataconfig);
-  printf(" [DONE]\n");
-  printf("*loading objects...\n");
+  attrset(COLOR_PAIR(C_OK));
+  printw("\t[DONE]\n");
+  attrset(COLOR_PAIR(C_TEXT));
+  printw("[*] loading objects...\n");
+  attrset(A_DIM);
   readraw(dataconfig.rawfile,&rawdata);
   loadObj(&rawdata);
 
-  
-  printf("*making map");
+  attrset(COLOR_PAIR(C_TEXT));
+  printw("[*] making map");
   genaratemap();
-  printf(" [DONE]\n");
-  printf("\nWorld sim; Press enter to start. nVerson : %s\n",gVerson);
-  getchar();
-  initscr();
+  attrset(COLOR_PAIR(C_OK));
+  printw("\t\t[DONE]\n");
+  attrset(COLOR_PAIR(C_TEXT));
+  printw("\nWorld sim; Press enter to start. nVerson : %s\n",gVerson);
+  getch();
+  clear();
   getmaxyx(stdscr,gWindowy,gWindowx);
   mapw = newwin(SCRY+2,SCRX+2 ,1,1);
-  start_color();
-  raw();
   noecho();
   curs_set(0);
   move(0,0);
@@ -96,18 +116,9 @@ void game(SDL_RWops* configfile) {
   //nonl();
 
 
-
-  init_pair(C_TEXT, COLOR_WHITE, COLOR_BLACK);
-  init_pair(C_HIGH, COLOR_YELLOW, COLOR_BLACK);
-  init_pair(C_WATER, COLOR_BLUE, COLOR_BLACK);
-  init_pair(C_MAGMA, COLOR_RED, COLOR_BLACK);
-  init_pair(C_GRASS, COLOR_GREEN, COLOR_BLACK);
-  init_pair(C_STONE, COLOR_WHITE, COLOR_BLACK);
-
-
   maprender(); 
   while (running) {
-    if (((CLOCKS_PER_SEC/1000)*gMSPT)<=(last+clock())) {
+    if (((CLOCKS_PER_SEC/1000)*gMSPT) < (clock()-last)) {
       mspt = (((clock()-last)));
       last = clock();
 

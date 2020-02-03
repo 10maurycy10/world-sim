@@ -45,7 +45,6 @@ void genaratemap() { //reset the map
 
 WINDOW* mapw;
 
-enum colors {C_TEXT,C_HIGH,C_GRASS,C_STONE,C_MAGMA,C_WATER};
 enum icons {CH_STONE =  '#',CH_WATER = '~'};
 char* gGrass = ",'.`";
 #define gGrasscount 4
