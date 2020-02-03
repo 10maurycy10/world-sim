@@ -1,36 +1,48 @@
 double gSealeval;
 double gLavatemp;
 double gLavaPlaceTemp;
-int gGrasregrow;
-int gMSPT;
-int gRavaPlaceTemp;
+int64_t gGrasregrow;
+int64_t gMSPT;
+int64_t gRavaPlaceTemp;
+int64_t gMapx;
+int64_t gMapy;
+int64_t gWindowx;
+int64_t gWindowy;
+
 
 char* gRFile; //raw file over ride
+char* gSfile;
 
-const char* gVerson = "0.9"; //game verson
+const char* gVerson = "0.12"; //game verson
 
-#define MAPY 40 //map size
-#define MAPX 80
-#define SCRY 20 //ccr size
-#define SCRX 40
+#define MAPY gMapy //map size
+#define MAPX gMapx
+#define SCRY (gWindowy-4) //sr size
+#define SCRX (gWindowx-4)
 
 struct Raw {
     double stoneMelt; //normlized temp
-    int grassRegrow; //time
+    int64_t grassRegrow; //time
     double seaLeval; //normlized elivatin
-    int MSPT; //mili secons per tick
-    int lava;
+    int64_t MSPT; //mili secons per tick
+    int64_t lava;
 };
 
-struct tyle **map;
-struct tyle **nmap;
+struct Save {
+  int64_t X;
+  int64_t Y;
+  struct Tyle data;
+};
+
+struct Tyle **map;
+struct Tyle **nmap;
 
 void loadObj(struct Raw* data) {
   gSealeval = data -> seaLeval;
-  gLavatemp = data -> stoneMelt;
+  gLavatemp = .5;
   gGrasregrow = data -> grassRegrow;
   gLavaPlaceTemp = data -> lava;
   gMSPT = data -> MSPT;
 }
 
-int frame = 0;
+int64_t frame = 0;

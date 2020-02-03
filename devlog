@@ -3,7 +3,7 @@
 [30,12,2019] :
     phaser for config reworked , working on numeric phrasing.
     Aded raw file entrees :
-        MSPT //ms per tick
+        MSPT //ms per tick/frame
         StoneMelt //currently nonfunctional!
         Sealeval //the sea level currently nonfunctional!
         Grassregrow //the time (ticks) that it takes for grass to regrow
@@ -13,5 +13,10 @@
     added -c option changes config file locations for modding or multiple preferences
 [4.1.2020]
  -r for raw file
-[4.7.2020]
+[7.1.2020]
+  tps = fps
   working on fixing renderer
+[13.1.2020]
+  fixed renderer.
+[x.1.2020]
+  

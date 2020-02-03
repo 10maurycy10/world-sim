@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
+
 #undef UNICODE
 #define UNICODE
 #define SDL_MAIN_HANDLED
 #include "game.c"
 int main (int argc, char *argv[]) {
-    int i = 0;
+    int64_t i = 0;
     char* cfile = "data/config.txt";
     gRFile = NULL;
     if ((i + 1 ) < argc) {
@@ -23,7 +24,7 @@ int main (int argc, char *argv[]) {
 
     }
     argv[0] = "STAWS by BuggyBug";
-    SDL_RWops* config = SDL_RWFromFile( cfile, "r+b" );
+    SDL_RWops* config = SDL_RWFromFile( cfile, "r" );
     game(config);
     return 0;
 }

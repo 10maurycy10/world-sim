@@ -1,13 +1,13 @@
 
 void readraw(SDL_RWops* file ,struct Raw* raw) {
-    int i = 0;
-    int sizeb = 0;
+    int64_t i = 0;
+    int64_t sizeb = 0;
     char* buffer = NULL;
     sizeb = (file -> size(file));
     buffer = malloc(1 + sizeb); //allock buffer and save size in size
     buffer[sizeb] = 0x00;
 
-    printf("loading objects..\n");
+//    printf("loading objects..\n");
 
     while ((SDL_RWread(file,&buffer[i],1,1))) {i++;}//read file into mem *buffer
     //printf("rawbuffer: %s\n",buffer);
@@ -32,7 +32,7 @@ void readraw(SDL_RWops* file ,struct Raw* raw) {
                 matchcol(buffer,&i,sizeb);
 
                     raw -> grassRegrow = readint(buffer,&i,sizeb,0,__INT16_MAX__);
-                    printf("grassregrow: %d\n",raw -> grassRegrow);
+                    printf("grassregrow: %d\n",(int)(raw -> grassRegrow));
 
                 skipcoments(buffer,&i,sizeb);
                 if(!stringmatch(buffer, &i,"]", sizeb)) {configerror("bad savefile tag unclosed");}
@@ -52,7 +52,7 @@ void readraw(SDL_RWops* file ,struct Raw* raw) {
                         matchcol(buffer,&i,sizeb);
 
                           raw -> MSPT = readint(buffer,&i,sizeb,0,__INT16_MAX__);
-                          printf("MSPT: %x\n",raw -> MSPT);
+                          printf("MSPT: %x\n",(int)(raw -> MSPT));
 
                         skipcoments(buffer,&i,sizeb);
                         if(!stringmatch(buffer, &i,"]", sizeb)) {configerror("bad savefile tag unclosed");}
@@ -62,7 +62,7 @@ void readraw(SDL_RWops* file ,struct Raw* raw) {
                         matchcol(buffer,&i,sizeb);
 
                           raw -> lava = readint(buffer,&i,sizeb,0,__INT16_MAX__);
-                          printf("lava: %x\n",raw -> lava);
+                          printf("lava: %x\n",(int)(raw -> lava));
 
                         skipcoments(buffer,&i,sizeb);
                         if(!stringmatch(buffer, &i,"]", sizeb)) {configerror("bad savefile tag unclosed");}
