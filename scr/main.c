@@ -23,7 +23,7 @@ int main (int argc, char *argv[]) {
         }
 
     }
-    argv[0] = "STAWS by BuggyBug";
+    argv[0] = "WS";
     SDL_RWops* config = SDL_RWFromFile( cfile, "r" );
     game(config);
     return 0;

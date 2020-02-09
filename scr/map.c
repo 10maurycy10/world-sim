@@ -144,15 +144,15 @@ void renderchar(int64_t x,int64_t y,int64_t xpos,int64_t ypos) {//render a x:x(m
     int64_t tylech = 0;
     switch (map[x][y].type){
     case T_GRASS:
-        attr |= COLOR_PAIR(C_GRASS);
+        attr |= F_COLOR_PAIR(C_GRASS);
         tylech |= gGrass[( (y^(gGrasscount / 2)) ^ ((x+1)^((gGrasscount))))%gGrasscount];
         break;
     case T_STONE:
         if (map[x][y].temperature > gLavatemp) {
-          attr |=  COLOR_PAIR(C_MAGMA);
+          attr |=  F_COLOR_PAIR(C_MAGMA);
           tylech |= CH_WATER;
         } else {
-          attr |=  COLOR_PAIR(C_STONE);
+          attr |=  F_COLOR_PAIR(C_STONE);
           tylech |= CH_STONE;
         }
 
@@ -163,12 +163,12 @@ void renderchar(int64_t x,int64_t y,int64_t xpos,int64_t ypos) {//render a x:x(m
     }
     if ((y == cursorY)&&(x == cursorX)&&((frame%60)>30))  {
       tylech = 'X';
-      attr =  (COLOR_PAIR(C_HIGH));
+      attr =  (F_COLOR_PAIR(C_HIGH));
     } else {
 
     }
-
-    mvwaddch(mapw,ypos,xpos,tylech | attr);
+    F_ATTR(attr);
+    F_MVputch(xpos+1,ypos+1,tylech);
 }
 
 void maprender() {
@@ -179,9 +179,9 @@ void maprender() {
           //renderchar(x + cursorX - SCRX/2,y + cursorY - SCRY/2,x+1,y+1);
           renderchar(x + cursorX - SCRX/2,y + cursorY - SCRY/2,x+1,y+1);
         else
-          mvwaddch(mapw,y+1,x+1,' ');
+          F_MVputch(x+1,y+1,' ');
       else
-        mvwaddch(mapw,y+1,x+1,' ');
+        F_MVputch(x+1,y+1,' ');
 
   box(mapw, 179 , 196 );
   wrefresh(mapw);
