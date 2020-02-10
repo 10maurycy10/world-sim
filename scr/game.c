@@ -79,6 +79,7 @@ void game(SDL_RWops* configfile) {
   F_ATTR(F_COLOR_PAIR(C_TEXT));
   F_printw("[*] loading data");
   readconfig(configfile,&dataconfig);
+  F_load(dataconfig.font);
   F_ATTR(F_COLOR_PAIR(C_OK));
   F_printw("\t[DONE]\n");
   F_ATTR(F_COLOR_PAIR(C_TEXT));
@@ -86,7 +87,7 @@ void game(SDL_RWops* configfile) {
   readraw(dataconfig.rawfile,&rawdata);
   loadObj(&rawdata);
   SDL_Event e;
-  
+
   F_ATTR(F_COLOR_PAIR(C_TEXT));
   F_printw("[*] making map");
   genaratemap();
@@ -94,13 +95,14 @@ void game(SDL_RWops* configfile) {
   F_printw("\t\t[DONE]\n");
   F_ATTR(F_COLOR_PAIR(C_TEXT));
   F_printw("\nWorld sim; Press enter to start. nVerson : %s\n",gVerson);
-  F_getmaxxy(gWindowx,gWindowy);
   printw("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
-  mapw = newwin(SCRY+2,SCRX+2 ,1,1);
+  F_getmaxxy(gWindowx,gWindowy);
+  F_MVputch(0,0,'a');
+  //mapw = newwin(SCRY+2,SCRX+2 ,1,1);
   F_more();
-  F_clear();
-  F_move(0,0);
-  F_refresh();
+  //F_clear();
+  //F_move(0,0);
+  //F_refresh();
 
 
   int64_t last = clock();
@@ -115,9 +117,10 @@ void game(SDL_RWops* configfile) {
   int key = 0;
   char shift = 0;
 
-  maprender(); 
+  //maprender(); 
+  F_clear();
   while (running) {
-    if (((CLOCKS_PER_SEC/1000)*gMSPT) < (clock()-last)) {
+    if (((CLOCKS_PER_SEC/1000)*gMSPT) <= (clock() - last)) {
       mspt = (((clock()-last)));
       last = clock();
 
@@ -135,9 +138,9 @@ void game(SDL_RWops* configfile) {
       }
 
       running &= io(key,shift,dataconfig);
-      maprender();
-      F_move(0,0);
-      F_printw("fps: %d, x:  %d, y: %d   ",(1000/(mspt+1)),(int)cursorX,(int)cursorY);
+      //maprender();
+      //F_move(0,0);
+      //printw("fps: %d, x:  %d, y: %d   ",(1000/(mspt+1)),(int)cursorX,(int)cursorY);
       F_refresh();
       frame++;
     }

@@ -24,7 +24,7 @@ struct Raw {
     double stoneMelt; //normlized temp
     int64_t grassRegrow; //time
     double seaLeval; //normlized elivatin
-    int64_t MSPT; //mili secons per tick
+    int64_t MSPT; //milli secons per tick
     int64_t lava;
 };
 

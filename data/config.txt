@@ -1,2 +1,3 @@
 [savefile : "data/saves/savefile.dat" ]
 [raw : "data/raw.txt" ]
+[font : "data/font.bmp" ]

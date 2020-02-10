@@ -3,6 +3,7 @@
 struct Config {
     SDL_RWops* savefile;
     SDL_RWops* rawfile;
+    char* font;
 };
 
 
@@ -173,9 +174,17 @@ void readconfig(SDL_RWops* file, struct Config *configstruct) {
 
                     free(strp);
 
+                    skipcoments(buffer,&i,size);
+                    if(!stringmatch(buffer, &i,"]", size)) {configerror("bad savefile tag unclosed");}
+            } else if (stringmatch(buffer,&i,"[font", size)) {
+                skipcoments(buffer,&i,size);
+                matchcol(buffer,&i,size);
+                skipcoments(buffer,&i,size);
+                strp = getstrtag(buffer,&i,size);
+                configstruct -> font = strp;
                 skipcoments(buffer,&i,size);
                 if(!stringmatch(buffer, &i,"]", size)) {configerror("bad savefile tag unclosed");}
-            } else{
+            } else {
                 configerror("bad entry");
             }
         }
