@@ -17,6 +17,7 @@ const char* gVerson = "0.12"; //game verson
 
 #define MAPY gMapy //map size
 #define MAPX gMapx
+#define TEST
 #define SCRY (gWindowy-4) //sr size
 #define SCRX (gWindowx-4)
 

@@ -15,6 +15,7 @@ struct Tyle {
 
 enum colors {C_TEXT,C_OK,C_FAIL,C_HIGH,C_GRASS,C_STONE,C_MAGMA,C_WATER};
 
+void gend();
 #include "font.c"
 #include "env.h"
 int64_t cursorX = 1 , cursorY = 1;
@@ -25,15 +26,15 @@ int64_t cursorX = 1 , cursorY = 1;
 
 //#define bool char
 
-enum controls {EXIT = SDLK_q,UP=SDLK_w,DOWN=SDLK_s,RIGHT=SDLK_d,LEFT=SDLK_a,RESTART=SDLK_r,P_LAND=SDLK_z,P_WATER=SDLK_x,P_LAVA=SDLK_c,P_load=SDLK_o,P_save=SDLK_p};
+enum controls {EXIT = SDLK_q,UP=SDLK_w,DOWN=SDLK_s,RIGHT=SDLK_d,LEFT=SDLK_a,RESTART=SDLK_r,P_LAND=SDLK_z,P_WATER=SDLK_x,P_LAVA=SDLK_c,P_load=SDLK_o,P_save=SDLK_p,P_debug=SDLK_ESCAPE};
 
 int64_t last;
 
 bool io(int64_t key,char S,struct Config data) {
 
-  if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-    return 1;
-  }
+  //if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+  //  return 1;
+  //}
 
   switch (key) {
     case 0 :return 1;
@@ -52,6 +53,7 @@ bool io(int64_t key,char S,struct Config data) {
     case P_WATER:map[cursorX][cursorY].elivation = .0f;map[cursorX][cursorY].type  = T_STONE;map[cursorX][cursorY].temperature = 0.0f;return 1;
     case P_LAVA:map[cursorX][cursorY].temperature = gLavaPlaceTemp; map[cursorX][cursorY].elivation = 1;return 1;
 
+    case P_debug: printf("MANANUAL CRASH : ");F_catch(1);
   }
 
   return 1;
@@ -59,46 +61,56 @@ bool io(int64_t key,char S,struct Config data) {
 
 void game(SDL_RWops* configfile) {
 
+  #ifdef P
+    #ifdef TEST
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,"Test build","This is a test build of the program.\n It may be have a lot of bugs.",NULL);
+    #endif
+  #endif
   bool running = true;
   struct Config dataconfig;
   struct Raw rawdata;
 
+  printf("F_init.\n");
   F_init();
 
+  printf("F_initpair.\n");
   F_initpair(C_TEXT, 255,255,255, 0,0,0);
 
-  F_initpair(C_OK,0,0,255, 0,0,0);
+  F_initpair(C_OK,0,255,0, 0,0,0);
   F_initpair(C_FAIL, 255,0,0, 0,0,0);
 
-  F_initpair(C_HIGH, 0x80,0,0x80, 0,0,0);
+  F_initpair(C_HIGH, 0x80,0x80, 0, 0,0,0);
   F_initpair(C_WATER, 0,255,0, 0,0,0);
   F_initpair(C_MAGMA, 255,0,0, 0,0,0);
   F_initpair(C_GRASS, 0,0,255, 0,0,0);
   F_initpair(C_STONE, 255,255,255, 0,0,0);
 
+  printf("F_attr.\n");
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] loading data");
   readconfig(configfile,&dataconfig);
+  printf("F_load.\n");
   F_load(dataconfig.font);
-  F_ATTR(F_COLOR_PAIR(C_OK));
-  F_printw("\t[DONE]\n");
+  printf("F_clear.\n");
+  F_clear();
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] loading objects...\n");
-  readraw(dataconfig.rawfile,&rawdata);
-  loadObj(&rawdata);
+  //F_printw("[*] loading objects...\n");
+  //readraw(dataconfig.rawfile,&rawdata);
+  //loadObj(&rawdata);
   SDL_Event e;
 
-  F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] making map");
-  genaratemap();
-  F_ATTR(F_COLOR_PAIR(C_OK));
-  F_printw("\t\t[DONE]\n");
-  F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("\nWorld sim; Press enter to start. nVerson : %s\n",gVerson);
-  printw("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
-  F_getmaxxy(gWindowx,gWindowy);
+  //F_ATTR(F_COLOR_PAIR(C_TEXT));
+  //F_printw("[*] making map");
+  //genaratemap();
+  //F_ATTR(F_COLOR_PAIR(C_OK));
+  //F_printw("\t\t[DONE]\n");
+  //F_ATTR(F_COLOR_PAIR(C_TEXT));
+  //F_printw("\nWorld sim; Press enter to start. nVerson : %s\n",gVerson);
+  //printw("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
+  //F_getmaxxy(gWindowx,gWindowy);
+  //F_MVputch(0,0,'a');
+  ////mapw = newwin(SCRY+2,SCRX+2 ,1,1);
   F_MVputch(0,0,'a');
-  //mapw = newwin(SCRY+2,SCRX+2 ,1,1);
+  printf("F_more.\n");
   F_more();
   //F_clear();
   //F_move(0,0);
@@ -107,42 +119,40 @@ void game(SDL_RWops* configfile) {
 
   int64_t last = clock();
   int64_t mspt = 0;
-  frame = 0;
+  //int64_t frame = 0;
 
-  cursorX = 0;
-  cursorY = 0;
 
   //nonl();
 
-  int key = 0;
+  int64_t key = 0;
   char shift = 0;
 
   //maprender(); 
-  F_clear();
   while (running) {
     if (((CLOCKS_PER_SEC/1000)*gMSPT) <= (clock() - last)) {
       mspt = (((clock()-last)));
       last = clock();
 
-      ticktyles();
-      
-      key = 0;
+      //ticktyles();
 
-      while( SDL_PollEvent( &e ) != 0 ) {
-        if( e.type == SDL_QUIT ) {
-            running = false;
-        } else if (e.type == SDL_KEYDOWN) {
-            key = e.key.keysym.sym;
-            shift = e.key.keysym.sym == KMOD_LSHIFT;
+      key = 0;
+      shift = 0;
+
+      while(F_gete(false,&e)) {
+        if (e.type == SDL_KEYDOWN) {
+          key = e.key.keysym.sym;
+          shift = e.key.keysym.sym == KMOD_LSHIFT;
         }
       }
+  
 
+      F_MVputch(0,0,'a');
+      F_MVputch(1,1,'b');
       running &= io(key,shift,dataconfig);
       //maprender();
-      //F_move(0,0);
-      //printw("fps: %d, x:  %d, y: %d   ",(1000/(mspt+1)),(int)cursorX,(int)cursorY);
+      printf("F_refresh.\n");
       F_refresh();
-      frame++;
+      //frame++;
     }
   }
 
@@ -150,6 +160,10 @@ void game(SDL_RWops* configfile) {
   F_refresh();
   F_end();
   //DOES NOT DEALOCK MAP & NMAP
-  printf("By nVoidPointer (nvoidpointer@gmail.com) (buggybugs@catty)\n");
+  gend();
   return;
+}
+
+void gend() {
+  printf("By nVoidPointer (nvoidpointer@gmail.com) (buggybugs@catty)\n");
 }
