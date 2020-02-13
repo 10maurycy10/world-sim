@@ -10,14 +10,17 @@
 struct Tyle {
   double elivation; //0 = deep ossen 1 = mounten .5 = sea leval
   double temperature; //0 = cold  1 = hot
+  union Data {
+    int mosstimer;
+  } data;
   int64_t type;
 };
 
 enum colors {C_TEXT,C_OK,C_FAIL,C_HIGH,C_GRASS,C_STONE,C_MAGMA,C_WATER};
 
 void gend();
-#include "font.c"
 #include "env.h"
+#include "font.c"
 int64_t cursorX = 1 , cursorY = 1;
 #include "config.c"
 #include "map.c"
@@ -74,42 +77,39 @@ void game(SDL_RWops* configfile) {
   F_init();
 
   printf("F_initpair.\n");
-  F_initpair(C_TEXT, 255,255,255, 0,0,0);
+  F_initpair(C_TEXT, 255,255,255);
 
-  F_initpair(C_OK,0,255,0, 0,0,0);
-  F_initpair(C_FAIL, 255,0,0, 0,0,0);
+  F_initpair(C_OK,0,0,255);
+  F_initpair(C_FAIL, 255,0,0);
 
-  F_initpair(C_HIGH, 0x80,0x80, 0, 0,0,0);
-  F_initpair(C_WATER, 0,255,0, 0,0,0);
-  F_initpair(C_MAGMA, 255,0,0, 0,0,0);
-  F_initpair(C_GRASS, 0,0,255, 0,0,0);
-  F_initpair(C_STONE, 255,255,255, 0,0,0);
+  F_initpair(C_HIGH, 0xFF, 0x00, 0xFF);
+  F_initpair(C_WATER, 0, 255, 0);
+  F_initpair(C_MAGMA, 255, 0, 0);
+  F_initpair(C_GRASS, 0, 0, 255);
+  F_initpair(C_STONE, 255, 255, 255);
 
-  printf("F_attr.\n");
   F_ATTR(F_COLOR_PAIR(C_TEXT));
   readconfig(configfile,&dataconfig);
-  printf("F_load.\n");
   F_load(dataconfig.font);
-  printf("F_clear.\n");
   F_clear();
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  //F_printw("[*] loading objects...\n");
-  //readraw(dataconfig.rawfile,&rawdata);
-  //loadObj(&rawdata);
+  F_printw("[*] loading objects...",0);
+  readraw(dataconfig.rawfile,&rawdata);
+  loadObj(&rawdata);
   SDL_Event e;
+  F_printw("\t\t[DONE]\n",0);
 
-  //F_ATTR(F_COLOR_PAIR(C_TEXT));
-  //F_printw("[*] making map");
-  //genaratemap();
-  //F_ATTR(F_COLOR_PAIR(C_OK));
-  //F_printw("\t\t[DONE]\n");
-  //F_ATTR(F_COLOR_PAIR(C_TEXT));
-  //F_printw("\nWorld sim; Press enter to start. nVerson : %s\n",gVerson);
-  //printw("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
-  //F_getmaxxy(gWindowx,gWindowy);
+  F_ATTR(F_COLOR_PAIR(C_TEXT));
+  F_printw("[*] making map",0);
+  genaratemap();
+  F_ATTR(F_COLOR_PAIR(C_OK));
+  F_printw("\t\t[DONE]\n",0);
+  F_ATTR(F_COLOR_PAIR(C_TEXT));
+  F_printw("World sim; Press enter to start. nVerson : %s\n",1,gVerson);
+  F_getmaxxy(gWindowx,gWindowy);
+  printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
   //F_MVputch(0,0,'a');
   ////mapw = newwin(SCRY+2,SCRX+2 ,1,1);
-  F_MVputch(0,0,'a');
   printf("F_more.\n");
   F_more();
   //F_clear();
@@ -133,7 +133,7 @@ void game(SDL_RWops* configfile) {
       mspt = (((clock()-last)));
       last = clock();
 
-      //ticktyles();
+      ticktyles();
 
       key = 0;
       shift = 0;
@@ -146,13 +146,16 @@ void game(SDL_RWops* configfile) {
       }
   
 
-      F_MVputch(0,0,'a');
-      F_MVputch(1,1,'b');
+      //F_MVputch(0,0,'a');
+      //F_MVputch(1,1,'b');
+      F_clear();
       running &= io(key,shift,dataconfig);
-      //maprender();
-      printf("F_refresh.\n");
+      maprender();
+      F_ATTR(F_COLOR_PAIR(C_TEXT));
+      F_move(0,1);
+      F_printw("fps: %d, x: %d, y: %d",3,(int)(1000/(mspt+1)),(int)cursorX,(int)cursorY);
       F_refresh();
-      //frame++;
+      frame++;
     }
   }
 

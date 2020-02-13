@@ -103,9 +103,7 @@ void saveSave(struct Config data) {
 }
 
 void dotyle(int64_t x, int64_t y,struct Tyle* dest) {
-  if (map[x][y].temperature > gLavatemp) {
-    map[x][y].type = T_STONE;
-  }
+
   if (y == 0 || y == (MAPY-1)) {
     dest -> elivation = map[x][y].elivation;
     dest -> temperature = map[x][y].temperature;
@@ -122,6 +120,21 @@ void dotyle(int64_t x, int64_t y,struct Tyle* dest) {
   dest -> type = map[x][y].type;
   dest -> elivation = map[x][y].elivation;
   dest -> temperature = ((map[x][y+1].temperature + map[x][y-1].temperature + map[x+1][y].temperature + map[x-1][y].temperature )/4 *.02) + (map[x][y].temperature *.98f);
+  switch (map[x][y].type) {
+    case T_STONE:
+      if (map[x][y].data.mosstimer)
+        dest -> data.mosstimer--;
+      if (map[x][y].data.mosstimer < 0)
+        dest -> type = T_GRASS;
+      break;
+    case T_GRASS:
+      if (map[x][y].temperature > gLavatemp) {
+        dest -> type = T_STONE;
+        dest -> data.mosstimer = gGrasregrow;
+      }
+      break;
+  }
+
 }
 
 
@@ -143,11 +156,11 @@ void renderchar(int64_t x,int64_t y,int64_t xpos,int64_t ypos) {//render a x:x(m
     int64_t attr = 0;
     int64_t tylech = 0;
     switch (map[x][y].type){
-    case T_GRASS:
+      case T_GRASS:
         attr |= F_COLOR_PAIR(C_GRASS);
         tylech |= gGrass[( (y^(gGrasscount / 2)) ^ ((x+1)^((gGrasscount))))%gGrasscount];
         break;
-    case T_STONE:
+      case T_STONE:
         if (map[x][y].temperature > gLavatemp) {
           attr |=  F_COLOR_PAIR(C_MAGMA);
           tylech |= CH_WATER;
@@ -182,7 +195,4 @@ void maprender() {
           F_MVputch(x+1,y+1,' ');
       else
         F_MVputch(x+1,y+1,' ');
-
-  box(mapw, 179 , 196 );
-  wrefresh(mapw);
 }

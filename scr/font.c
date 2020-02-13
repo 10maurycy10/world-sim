@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <math.h>
 
 struct F_Color {
     uint16_t red,blue,green;
@@ -17,17 +18,14 @@ SDL_Surface* gScreenSurface;
 
 #define F_catch(x) do {int y; if ((y = (x))) {printf("ERROR: %s\n",SDL_GetError()); _Exit(1);}} while (0);
 
-//xxxx xxxx CCCC CCCC xxxx xxxx xxxx xxxxx
-//* C : color pair
-#define F_I_COLOR_SHIFT 24
 
-#define F_COLOR_PAIR(x) (x << F_I_COLOR_SHIFT)
-uint64_t F_I_attr;
-#define F_ATTR(x) F_I_attr=x;
+#define F_COLOR_PAIR(x) (x)
+uint16_t color_pair;
+#define F_ATTR(x) color_pair=x;
 
 SDL_Renderer* gRenderer = NULL;
 #define NO_COL 256
-struct F_Color F_colors[NO_COL][2];
+struct F_Color F_colors[NO_COL];
 
 SDL_Surface* loadSurface(char* path) {
     SDL_Surface* loadedSurface = SDL_LoadBMP(path);
@@ -38,15 +36,11 @@ SDL_Surface* loadSurface(char* path) {
     return loadedSurface;
 }
 
-void F_initpair(int no, int fr, int fb, int fg, int br, int bb, int bg) {
+void F_initpair(int no, int fr, int fb, int fg) {
 
-    F_colors[no][0].red = fr;
-    F_colors[no][0].green = fg;
-    F_colors[no][0].blue = fb;
-
-    F_colors[no][1].red = br;
-    F_colors[no][1].green = bg;
-    F_colors[no][1].blue = bb;
+    F_colors[no].red = fr;
+    F_colors[no].green = fg;
+    F_colors[no].blue = fb;
 }
 
 SDL_Window* window = NULL;
@@ -54,35 +48,37 @@ SDL_Window* window = NULL;
 void F_load(char* font) {
     SDL_Surface* s = loadSurface(font);
 
-    int charH = (s -> h) / 16;
-    int charW = (s -> pitch) / 16;
 
+
+    //s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
+
+    Uint32 colorKey = SDL_MapRGB(s -> format, 0xff, 0, 0);
+    F_catch(SDL_SetColorKey(s,SDL_TRUE,colorKey));
+
+
+    int charH = (s -> h) / 16;
+    int charW = (s -> w) / 16;
     F_x_size = charW;
     F_y_size = charH;
-
-    //Uint32 colorKey = SDL_MapRGB(s -> format, 0xff, 0, 0);
-    //s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
-    //F_catch(SDL_SetColorKey(s,SDL_TRUE,colorKey));
-
+    printf("fsizeX : %d, fsizey : %d",F_x_size , F_y_size);
     fontT = SDL_CreateTextureFromSurface( gRenderer, s );
     SDL_FreeSurface(s);
-    //F_catch(SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0x00, 0xFF ));
+    F_catch(SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF ));
 }
 
 void F_init() {
 
-    F_colors[0][0].red = 0xFF; // set up COLOR
-    F_colors[0][0].blue = 0xFF;
-    F_colors[0][0].green = 0xFF;
-    F_colors[0][1].red = 0x00;
-    F_colors[0][1].blue = 0x00;
-    F_colors[0][1].green = 0x00;
+    F_colors[0].red = 0xFF; // set up COLOR
+    F_colors[0].blue = 0xFF;
+    F_colors[0].green = 0xFF;
 
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN );
-    gScreenSurface = SDL_GetWindowSurface(window);
+
     //SDL_FillRect( gScreenSurface, NULL, SDL_MapRGB( gScreenSurface->format, 0x00, 0x00, 0x00 ) ); // RGB
     SDL_UpdateWindowSurface(window);
+    gScreenSurface = SDL_GetWindowSurface(window);
+    //SDL_GetWindowSize(window,(int*)&gWindowx,(int*)&gWindowy);
     gRenderer = SDL_CreateRenderer(window, -1 , SDL_RENDERER_ACCELERATED );
     SDL_RenderClear(gRenderer);
 }
@@ -94,9 +90,11 @@ void F_end() {
 }
 
 void F_refresh() {
-    SDL_RenderCopy(gRenderer,fontT, NULL , NULL);
+    //SDL_RenderCopy(gRenderer,fontT, NULL , NULL);
     //SDL_RenderPresent(gRenderer);
-    F_catch(SDL_UpdateWindowSurface(window));
+    //F_catch(SDL_UpdateWindowSurface(window));
+    SDL_RenderPresent(gRenderer);
+    SDL_Delay(0);
     F_catch(SDL_RenderClear(gRenderer));
 }
 
@@ -136,19 +134,39 @@ void F_MVputch(int x, int y, int c) {
     int pixX = F_x_size * x;
     int pixY = F_y_size * y;
 
-    int fontX = c%16;
-    int fontY = c/16;
+    int fontX = (c%16) * F_x_size;
+    int fontY = (c/16) * F_y_size;
 
     SDL_Rect scr = { fontX, fontY, F_x_size, F_y_size};
     SDL_Rect dst = { pixX, pixY, F_x_size, F_y_size};
 
+    SDL_SetTextureColorMod(fontT,F_colors[color_pair].red, F_colors[color_pair].green, F_colors[color_pair].blue);
     F_catch(SDL_RenderCopy(gRenderer,fontT, &scr , &dst));
     //SDL_RenderCopy(gRenderer,fontT, NULL,NULL);
 
-}   
+}  
 
 void F_putch(char c) {
     F_MVputch(F_cursorx,F_cursory,c);
+    F_cursorx++;
+}
+
+void F_printInt(int in,int base) {
+    int i, rem, len = 0, n;
+    n = in;
+    while (n != 0){
+        len++;
+        n /= base;
+    }
+    if (len == 0) {
+        F_MVputch(F_cursorx,F_cursory,'0');
+    }
+    F_cursorx += len;
+    for (i = 0; i < len; i++){
+        rem = in % base;
+        in = in / base;
+        F_MVputch(F_cursorx - i,F_cursory,"0123456789ABCDEF"[rem]);
+    }
     F_cursorx++;
 }
 
@@ -168,18 +186,26 @@ void F_printw(char* x ,int n, ...) {
                     }
                 break;
                 case 'd' :;
-                    int in = va_arg(a, int);
-                    //printw("%d",in);
+                    int ind = va_arg(a, int);
+                    F_printInt(ind,10);
                 break;
                 case 'x' :;
-                    int i = va_arg(a, int);
-                    //printw("%x",i);
+                    int inx = va_arg(a, int);
+                    F_printInt(inx,16);
+                break;
+                case 'f' :;
+                    int inf = va_arg(a, double);
+                    F_printInt(floor(inf),16);
                 break;
             }
             i++;
         } else {
             F_putch(x[i]);
             i++;
+            if (x[i]=='\n') {
+                F_cursory++;
+                F_cursorx = -1;
+            }
         }
     }
 }
