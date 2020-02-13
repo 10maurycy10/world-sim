@@ -10,8 +10,8 @@ enum  S {T_STONE,T_GRASS};
 
 void genaratemap() { //reset the map
 
-  gMapy = 200;
-  gMapx = 400;
+  gMapy = 100;
+  gMapx = 100;
 
   if (map) {
     for (int64_t i = 0;i<MAPX;i++) {

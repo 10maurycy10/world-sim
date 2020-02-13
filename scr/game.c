@@ -16,6 +16,7 @@ struct Tyle {
   int64_t type;
 };
 
+enum RS {RS_CLOSE,RS_GAME,RS_MAIN};
 enum colors {C_TEXT,C_OK,C_FAIL,C_HIGH,C_GRASS,C_STONE,C_MAGMA,C_WATER};
 
 void gend();
@@ -33,7 +34,7 @@ enum controls {EXIT = SDLK_q,UP=SDLK_w,DOWN=SDLK_s,RIGHT=SDLK_d,LEFT=SDLK_a,REST
 
 int64_t last;
 
-bool io(int64_t key,char S,struct Config data) {
+bool gameIo(int64_t key,char S,struct Config data) {
 
   //if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
   //  return 1;
@@ -61,6 +62,104 @@ bool io(int64_t key,char S,struct Config data) {
 
   return 1;
 }
+struct Config dataconfig;
+int running;
+void gameloop() {
+  struct Raw rawdata;
+  F_ATTR(F_COLOR_PAIR(C_TEXT));
+
+  F_clear();
+  F_ATTR(F_COLOR_PAIR(C_TEXT));
+  F_printw("[*] loading objects...",0);
+  readraw(dataconfig.rawfile,&rawdata);
+  loadObj(&rawdata);
+  SDL_Event e;
+  F_ATTR(F_COLOR_PAIR(C_OK));
+  F_printw("\t\t[DONE]\n",0);
+
+  F_ATTR(F_COLOR_PAIR(C_TEXT));
+  F_printw("[*] making map",0);
+  genaratemap();
+  F_ATTR(F_COLOR_PAIR(C_OK));
+  F_printw("\t\t[DONE]\n",0);
+  F_ATTR(F_COLOR_PAIR(C_TEXT));
+  F_printw("World sim; Press enter to start. nVerson : %s\n",1,gVerson);
+  F_getmaxxy(gWindowx,gWindowy);
+  printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
+  //F_MVputch(0,0,'a');
+  ////mapw = newwin(SCRY+2,SCRX+2 ,1,1);
+  //printf("F_more.\n");
+  //F_more();
+  //F_clear();
+  //F_move(0,0);
+  //F_refresh();
+
+
+  int64_t last = clock();
+  int64_t mspt = 0;
+  //int64_t frame = 0;
+
+
+  //nonl();
+
+  int64_t key = 0;
+  char shift = 0;
+  while (running == RS_GAME) { 
+  if (((CLOCKS_PER_SEC/1000)*gMSPT) <= (clock() - last)) {
+  mspt = (((clock()-last)));
+  last = clock();
+  ticktyles();
+  key = 0;
+  shift = 0;
+  while(F_gete(false,&e)) {
+    if (e.type == SDL_KEYDOWN) {
+      key = e.key.keysym.sym;
+      shift = e.key.keysym.sym == KMOD_LSHIFT;
+    } else if (e.type == SDL_WINDOWEVENT_CLOSE) {
+      running = RS_CLOSE;
+      return;
+    }
+  }
+  //F_MVputch(0,0,'a');
+  //F_MVputch(1,1,'b');
+  F_clear();
+  running = gameIo(key,shift,dataconfig);
+  maprender();
+  F_ATTR(F_COLOR_PAIR(C_TEXT));
+  F_move(0,1);
+  F_printw("fps: %d, x: %d, y: %d",3,(int)(1000/(mspt+1)),(int)cursorX,(int)cursorY);
+  F_refresh();
+  frame++;
+  }
+  }
+}
+
+void mainloop() {
+  F_clear();
+  SDL_Event e;
+  F_ATTR(C_TEXT);
+  F_printw("--[world sim]--\n",0);
+  F_printw("\n",0);
+  F_printw("  a: world sim\n",0);
+  F_printw("  b: exit\n",0);
+  F_refresh();
+
+  while (running == RS_MAIN) {
+    while(F_gete(false,&e)) {
+      if (e.type == SDL_KEYDOWN) {
+        switch (e.key.keysym.sym) {
+        case SDLK_a:
+          running = RS_GAME;
+          break;
+        case SDLK_b:
+          running = RS_CLOSE;
+          break;
+        }
+      }
+    }
+  }
+
+}
 
 void game(SDL_RWops* configfile) {
 
@@ -69,9 +168,7 @@ void game(SDL_RWops* configfile) {
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,"Test build","This is a test build of the program.\n It may be have a lot of bugs.",NULL);
     #endif
   #endif
-  bool running = true;
-  struct Config dataconfig;
-  struct Raw rawdata;
+
 
   printf("F_init.\n");
   F_init();
@@ -87,83 +184,30 @@ void game(SDL_RWops* configfile) {
   F_initpair(C_MAGMA, 255, 0, 0);
   F_initpair(C_GRASS, 0, 0, 255);
   F_initpair(C_STONE, 255, 255, 255);
-
-  F_ATTR(F_COLOR_PAIR(C_TEXT));
   readconfig(configfile,&dataconfig);
   F_load(dataconfig.font);
-  F_clear();
-  F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] loading objects...",0);
-  readraw(dataconfig.rawfile,&rawdata);
-  loadObj(&rawdata);
-  SDL_Event e;
-  F_printw("\t\t[DONE]\n",0);
 
-  F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] making map",0);
-  genaratemap();
-  F_ATTR(F_COLOR_PAIR(C_OK));
-  F_printw("\t\t[DONE]\n",0);
-  F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("World sim; Press enter to start. nVerson : %s\n",1,gVerson);
-  F_getmaxxy(gWindowx,gWindowy);
-  printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
-  //F_MVputch(0,0,'a');
-  ////mapw = newwin(SCRY+2,SCRX+2 ,1,1);
-  printf("F_more.\n");
-  F_more();
-  //F_clear();
-  //F_move(0,0);
-  //F_refresh();
+  running = RS_MAIN;
 
-
-  int64_t last = clock();
-  int64_t mspt = 0;
-  //int64_t frame = 0;
-
-
-  //nonl();
-
-  int64_t key = 0;
-  char shift = 0;
-
-  //maprender(); 
-  while (running) {
-    if (((CLOCKS_PER_SEC/1000)*gMSPT) <= (clock() - last)) {
-      mspt = (((clock()-last)));
-      last = clock();
-
-      ticktyles();
-
-      key = 0;
-      shift = 0;
-
-      while(F_gete(false,&e)) {
-        if (e.type == SDL_KEYDOWN) {
-          key = e.key.keysym.sym;
-          shift = e.key.keysym.sym == KMOD_LSHIFT;
-        }
-      }
-  
-
-      //F_MVputch(0,0,'a');
-      //F_MVputch(1,1,'b');
+  while (1) {
+    switch (running) {
+    case RS_CLOSE:
       F_clear();
-      running &= io(key,shift,dataconfig);
-      maprender();
-      F_ATTR(F_COLOR_PAIR(C_TEXT));
-      F_move(0,1);
-      F_printw("fps: %d, x: %d, y: %d",3,(int)(1000/(mspt+1)),(int)cursorX,(int)cursorY);
       F_refresh();
-      frame++;
+      F_end();
+      //DOES NOT DEALOCK MAP & NMAP
+      gend();
+      break;
+    case RS_GAME:
+      gameloop(); 
+      break;
+    case RS_MAIN:
+      mainloop(); 
+      break;
     }
   }
+  
 
-  F_clear();
-  F_refresh();
-  F_end();
-  //DOES NOT DEALOCK MAP & NMAP
-  gend();
   return;
 }
 

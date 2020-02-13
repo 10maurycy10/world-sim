@@ -159,7 +159,8 @@ void F_printInt(int in,int base) {
         n /= base;
     }
     if (len == 0) {
-        F_MVputch(F_cursorx,F_cursory,'0');
+        F_MVputch(F_cursorx+1,F_cursory,'0');
+        F_cursorx++;
     }
     F_cursorx += len;
     for (i = 0; i < len; i++){
@@ -202,9 +203,9 @@ void F_printw(char* x ,int n, ...) {
         } else {
             F_putch(x[i]);
             i++;
-            if (x[i]=='\n') {
+            if (x[i-1]=='\n') {
                 F_cursory++;
-                F_cursorx = -1;
+                F_cursorx = 0;
             }
         }
     }
