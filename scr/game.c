@@ -1,190 +1,293 @@
+#include "profiler.c"
+#include "toolkit.h"
+#include <SDL.h>
+#include <SDL_main.h>
+#include <math.h>
 #include <stdint.h>
-#include <curses.h>
 #include <stdlib.h>
 #include <time.h>
-#include <SDL_main.h>
-#include <SDL.h>
-#include <curses.h>
-#include <math.h>
 
 struct Tyle {
-  double elivation; //0 = deep ossen 1 = mounten .5 = sea leval
-  double temperature; //0 = cold  1 = hot
+  double elivation;   // 0 = dp ossen 1 = mounten .5 = sea leval
+  double temperature; // 0 = cold  1 = hot
   union Data {
     int mosstimer;
   } data;
   int64_t type;
 };
 
-enum RS {RS_CLOSE,RS_GAME,RS_MAIN};
-enum colors {C_TEXT,C_OK,C_FAIL,C_HIGH,C_GRASS,C_STONE,C_MAGMA,C_WATER};
+enum RS { RS_CLOSE,
+          RS_GAME,
+          RS_MAIN };
+enum colors {
+  C_TEXT,
+  C_OK,
+  C_FAIL,
+  C_HIGH,
+  C_GRASS,
+  C_STONE,
+  C_MAGMA,
+  C_WATER,
+  C_DIM
+};
 
 void gend();
 #include "env.h"
 #include "font.c"
-int64_t cursorX = 1 , cursorY = 1;
+int64_t cursorX = 1, cursorY = 1;
 #include "config.c"
 #include "map.c"
 #include "raw.c"
 
+enum controls {
+  K_OK = SDLK_RETURN,
+  K_LEFT = SDLK_LEFT,
+  K_UP = SDLK_UP,
+  K_DOWN = SDLK_DOWN,
+  K_RIGHT = SDLK_RIGHT,
 
-//#define bool char
+  K_EXIT = SDLK_q,
+  K_RESTART = SDLK_r,
 
-enum controls {EXIT = SDLK_q,UP=SDLK_w,DOWN=SDLK_s,RIGHT=SDLK_d,LEFT=SDLK_a,RESTART=SDLK_r,P_LAND=SDLK_z,P_WATER=SDLK_x,P_LAVA=SDLK_c,P_load=SDLK_o,P_save=SDLK_p,P_debug=SDLK_ESCAPE};
+  K_LAND = SDLK_z,
+  K_WATER = SDLK_x,
+  K_LAVA = SDLK_c,
+
+  K_load = SDLK_o,
+  K_save = SDLK_p,
+  K_debug = SDLK_ESCAPE
+};
 
 int64_t last;
+int running;
 
-bool gameIo(int64_t key,char S,struct Config data) {
+bool gameIo(int64_t key, struct Config data) {
 
-  //if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+  // if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
   //  return 1;
   //}
 
   switch (key) {
-    case 0 :return 1;
+  case 0:
+    return 1;
 
-    case EXIT:return 0;
+  case K_EXIT:
+    running = RS_MAIN;
+    break;
 
-    case LEFT:if(cursorX>0)cursorX-=1;return 1;
-    case RIGHT:if(cursorX<MAPX-1)cursorX+=1;return 1;
-    case UP:if(cursorY>0)cursorY-=1;return 1;
-    case DOWN:if(cursorY<MAPY-1)cursorY+=1;return 1;
+  case K_LEFT:
+    if (cursorX > 0)
+      cursorX -= 1;
+    break;
+  case K_RIGHT:
+    if (cursorX < MAPX - 1)
+      cursorX += 1;
+    break;
+  case K_UP:
+    if (cursorY > 0)
+      cursorY -= 1;
+    break;
+  case K_DOWN:
+    if (cursorY < MAPY - 1)
+      cursorY += 1;
+    break;
 
-    case P_load:loadSave(data);return 1;
-    case P_save:saveSave(data);return 1;
+  case K_load:
+    loadSave(data);
+    break;
+  case K_save:
+    saveSave(data);
+    break;
 
-    case P_LAND:map[cursorX][cursorY].elivation = .51f;map[cursorX][cursorY].type = T_GRASS;map[cursorX][cursorY].temperature = 0.0f;return 1;
-    case P_WATER:map[cursorX][cursorY].elivation = .0f;map[cursorX][cursorY].type  = T_STONE;map[cursorX][cursorY].temperature = 0.0f;return 1;
-    case P_LAVA:map[cursorX][cursorY].temperature = gLavaPlaceTemp; map[cursorX][cursorY].elivation = 1;return 1;
+  case K_LAND:
+    map[cursorX][cursorY].elivation = .51f;
+    map[cursorX][cursorY].type = T_GRASS;
+    map[cursorX][cursorY].temperature = 0.0f;
+    break;
+  case K_WATER:
+    map[cursorX][cursorY].elivation = .0f;
+    map[cursorX][cursorY].type = T_STONE;
+    map[cursorX][cursorY].temperature = 0.0f;
+    break;
+  case K_LAVA:
+    map[cursorX][cursorY].temperature = gLavaPlaceTemp;
+    map[cursorX][cursorY].elivation = 1;
+    break;
 
-    case P_debug: printf("MANANUAL CRASH : ");F_catch(1);
+  case K_debug:
+    running = RS_MAIN;
+    F_catch(1);
   }
 
   return 1;
 }
 struct Config dataconfig;
-int running;
 void gameloop() {
+  pInit();
   struct Raw rawdata;
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-
   F_clear();
+  F_move(0, 0);
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] loading objects...",0);
-  readraw(dataconfig.rawfile,&rawdata);
+  F_printw("[*] loading objects...", 0);
+  readraw(dataconfig.rawfile, &rawdata);
   loadObj(&rawdata);
   SDL_Event e;
   F_ATTR(F_COLOR_PAIR(C_OK));
-  F_printw("\t\t[DONE]\n",0);
+  F_printw("\t\t[DONE]\n", 0);
 
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] making map",0);
+  F_printw("[*] making map", 0);
   genaratemap();
   F_ATTR(F_COLOR_PAIR(C_OK));
-  F_printw("\t\t[DONE]\n",0);
+  F_printw("\t\t[DONE]\n", 0);
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("World sim; Press enter to start. nVerson : %s\n",1,gVerson);
-  F_getmaxxy(gWindowx,gWindowy);
-  printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
-  //F_MVputch(0,0,'a');
-  ////mapw = newwin(SCRY+2,SCRX+2 ,1,1);
-  //printf("F_more.\n");
-  //F_more();
-  //F_clear();
-  //F_move(0,0);
-  //F_refresh();
-
+  F_getmaxxy(gWindowx, gWindowy);
+  // printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
 
   int64_t last = clock();
   int64_t mspt = 0;
-  //int64_t frame = 0;
-
-
-  //nonl();
-
   int64_t key = 0;
-  char shift = 0;
-  while (running == RS_GAME) { 
-  if (((CLOCKS_PER_SEC/1000)*gMSPT) <= (clock() - last)) {
-  mspt = (((clock()-last)));
-  last = clock();
-  ticktyles();
-  key = 0;
-  shift = 0;
-  while(F_gete(false,&e)) {
-    if (e.type == SDL_KEYDOWN) {
-      key = e.key.keysym.sym;
-      shift = e.key.keysym.sym == KMOD_LSHIFT;
-    } else if (e.type == SDL_WINDOWEVENT_CLOSE) {
-      running = RS_CLOSE;
-      return;
+
+  profile(T_spin);
+
+  while (running == RS_GAME) {
+    if (((CLOCKS_PER_SEC / 1000) * gMSPT) < (clock() - last)) {
+      mspt = (clock() - last);
+      last = clock();
+      profile(T_tick);
+      ticktyles();
+      profile(T_input);
+      key = 0;
+      while (F_gete(&e)) {
+        if (e.type == SDL_KEYDOWN) {
+          key = e.key.keysym.sym;
+        } else if (e.type == SDL_WINDOWEVENT_CLOSE) {
+          running = RS_CLOSE;
+          return;
+        }
+      }
+      // F_MVputch(0,0,'a');
+      // F_MVputch(1,1,'b');
+      F_clear();
+      gameIo(key, dataconfig);
+      profile(T_render);
+      maprender();
+      F_ATTR(C_TEXT);
+      F_box(0, 0, SCRX + 1, SCRY + 1);
+      F_ATTR(F_COLOR_PAIR(C_TEXT));
+      if (1000 / mspt < 60)
+        F_ATTR(C_FAIL);
+      else
+        F_ATTR(C_TEXT);
+      F_move(1, 0);
+      F_printw("fps max(phyical): %d", 1, (int)(1000 / mspt));
+      F_refresh();
+      frame++;
+      profile(T_spin);
     }
-  }
-  //F_MVputch(0,0,'a');
-  //F_MVputch(1,1,'b');
-  F_clear();
-  running = gameIo(key,shift,dataconfig);
-  maprender();
-  F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_move(0,1);
-  F_printw("fps: %d, x: %d, y: %d",3,(int)(1000/(mspt+1)),(int)cursorX,(int)cursorY);
-  F_refresh();
-  frame++;
-  }
   }
 }
 
 void mainloop() {
   F_clear();
   SDL_Event e;
-  F_ATTR(C_TEXT);
-  F_printw("--[world sim]--\n",0);
-  F_printw("\n",0);
-  F_printw("  a: world sim\n",0);
-  F_printw("  b: exit\n",0);
-  F_refresh();
+  int pos = 0;
 
   while (running == RS_MAIN) {
-    while(F_gete(false,&e)) {
+
+    F_clear();
+    F_move(0, 0);
+    F_ATTR(C_TEXT);
+    F_box(0, 0, 15, 15);
+    F_move(2, 0);
+    F_printw("world sim\n\n", 0);
+    // F_printInt(pos,16);
+    if (pos == 0) {
+      F_ATTR(C_TEXT);
+      F_printw("\t\tworld sim\n", 0);
+    } else {
+      F_ATTR(C_DIM);
+      F_printw("\t\tworld sim\n", 0);
+    }
+    if (pos == 1) {
+      F_ATTR(C_TEXT);
+      F_printw("\t\tabout\n", 0);
+    } else {
+      F_ATTR(C_DIM);
+      F_printw("\t\tabout\n", 0);
+    }
+    if (pos == 2) {
+      F_ATTR(C_TEXT);
+      F_printw("\t\texit\n", 0);
+    } else {
+      F_ATTR(C_DIM);
+      F_printw("\t\texit\n", 0);
+    }
+    F_refresh();
+    SDL_Delay(15);
+
+    while (F_gete(&e)) {
       if (e.type == SDL_KEYDOWN) {
         switch (e.key.keysym.sym) {
-        case SDLK_a:
-          running = RS_GAME;
+        case SDLK_DOWN:
+          pos += 1;
+          if (pos > 2)
+            pos = 2;
           break;
-        case SDLK_b:
-          running = RS_CLOSE;
+        case SDLK_UP:
+          pos -= 1;
+          if (pos < 0)
+            pos = 0;
+          break;
+        case K_OK:
+          switch (pos) {
+          case 0:
+            running = RS_GAME;
+            break;
+          case 2:
+            running = RS_CLOSE;
+            break;
+          case 1:
+            F_clear();
+            F_printw("world sim by MZ; verson: %s", 1, gVerson);
+            F_more();
+            break;
+          }
           break;
         }
       }
     }
   }
-
 }
 
-void game(SDL_RWops* configfile) {
+void game(SDL_RWops *configfile) {
 
-  #ifdef P
-    #ifdef TEST
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,"Test build","This is a test build of the program.\n It may be have a lot of bugs.",NULL);
-    #endif
-  #endif
+#ifdef P
+#ifdef TEST
+  SDL_ShowSimpleMessageBox(
+      SDL_MESSAGEBOX_INFORMATION, "Test build",
+      "This is a test build of the program.\n It may be have a lot of bugs.",
+      NULL);
+#endif
+#endif
 
-
-  printf("F_init.\n");
+  // printf("F_init.\n");
   F_init();
 
-  printf("F_initpair.\n");
-  F_initpair(C_TEXT, 255,255,255);
+  // printf("F_initpair.\n");
+  F_initpair(C_TEXT, 255, 255, 255);
+  F_initpair(C_DIM, 0xA0, 0xA0, 0xA0);
 
-  F_initpair(C_OK,0,0,255);
-  F_initpair(C_FAIL, 255,0,0);
-
+  F_initpair(C_OK, 0, 0, 255);
+  F_initpair(C_FAIL, 255, 0, 0);
   F_initpair(C_HIGH, 0xFF, 0x00, 0xFF);
+
   F_initpair(C_WATER, 0, 255, 0);
   F_initpair(C_MAGMA, 255, 0, 0);
   F_initpair(C_GRASS, 0, 0, 255);
   F_initpair(C_STONE, 255, 255, 255);
-  readconfig(configfile,&dataconfig);
+  readconfig(configfile, &dataconfig);
   F_load(dataconfig.font);
 
   running = RS_MAIN;
@@ -194,23 +297,26 @@ void game(SDL_RWops* configfile) {
     case RS_CLOSE:
       F_clear();
       F_refresh();
-      F_end();
-      //DOES NOT DEALOCK MAP & NMAP
       gend();
+      F_end();
+      _Exit(0);
+      // DOES NOT DEALOCK MAP & NMAP
       break;
     case RS_GAME:
-      gameloop(); 
+      gameloop();
       break;
     case RS_MAIN:
-      mainloop(); 
+      mainloop();
       break;
     }
   }
-  
-
   return;
 }
 
 void gend() {
+  printTag("spin", T_spin);
+  printTag("init", T_init);
+  printTag("in", T_input);
+  printTag("tick", T_tick);
   printf("By nVoidPointer (nvoidpointer@gmail.com) (buggybugs@catty)\n");
 }

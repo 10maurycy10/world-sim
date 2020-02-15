@@ -2,6 +2,7 @@
     "files.associations": {
         "stdio.h": "c",
         "sdl_main.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "curses.h": "c"
     }
 }
