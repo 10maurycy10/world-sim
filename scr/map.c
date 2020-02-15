@@ -35,21 +35,22 @@ void genaratemap(int seed) { //reset the map
     nmap[i] = malloc((sizeof(struct Tyle)) * MAPY);
   }
 
-  int ch[MAPX/10+1][MAPY/10+1];
+  int ch [MAPX+1][MAPY+1];
 
-  for(int i = 0;i < MAPX/2+1;i++)
-    for(int e = 0;e < MAPY/2+1;e++)
+  for(int i = 0;i < MAPX/10+1;i++)
+    for(int e = 0;e < MAPY/10+1;e++)
       ch[i][e] = rand()%1024;
 
   for (int64_t y = 0; y < MAPY; y++) {
     for (int64_t x = 0; x < MAPX; x++) {
       map[x][y].temperature = 0.0f;
-      if (.5 > ch[x/10][y/10])
+      if (1024/2 > ((ch[x/10][y/10]*(x%10)/10)+(ch[x/10+1][y/10]*(10-x%10)/10)+(ch[x/10][y/10]*(y%10)/10)+(ch[x/10][y/10+1]*(10-y%10)/10)/4))
         map[x][y].type = T_GRASS;
       else
         map[x][y].type = T_STONE;
     }
   }
+  free(ch);
   for (int64_t y = 1; y < (MAPY-1); y++) {
     for (int64_t x = 1; x < (MAPX-1); x++) {
       if (map[x][y].type == T_STONE) {
