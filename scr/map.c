@@ -3,10 +3,14 @@
 #define true 1
 #endif
 
-enum S { T_STONE,
-         T_GRASS };
+enum S { T_WALL,
+         T_GRASS,
+         T_STONE,
+};
 
-void genaratemap() { //reset the map
+void genaratemap(int seed) { //reset the map
+
+  srand(seed);
 
   gMapy = 100;
   gMapx = 100;
@@ -31,14 +35,31 @@ void genaratemap() { //reset the map
     nmap[i] = malloc((sizeof(struct Tyle)) * MAPY);
   }
 
+  int ch[MAPX/10+1][MAPY/10+1];
+
+  for(int i = 0;i < MAPX/2+1;i++)
+    for(int e = 0;e < MAPY/2+1;e++)
+      ch[i][e] = rand()%1024;
+
   for (int64_t y = 0; y < MAPY; y++) {
     for (int64_t x = 0; x < MAPX; x++) {
-      map[x][y].elivation = 0.5f;
       map[x][y].temperature = 0.0f;
-      map[x][y].type = T_GRASS;
+      if (.5 > ch[x/10][y/10])
+        map[x][y].type = T_GRASS;
+      else
+        map[x][y].type = T_STONE;
     }
   }
-  return;
+  for (int64_t y = 1; y < (MAPY-1); y++) {
+    for (int64_t x = 1; x < (MAPX-1); x++) {
+      if (map[x][y].type == T_STONE) {
+        if ((map[x-1][y].type == T_GRASS) || (map[x+1][y].type == T_GRASS) || (map[x][y+1].type == T_GRASS) || (map[x][y-1].type == T_GRASS))
+          map[x][y].type = T_STONE;
+        else
+          map[x][y].type = T_WALL;
+      }
+    }
+  }
 }
 
 enum icons { CH_STONE = '#',
@@ -68,23 +89,6 @@ void loadSave(struct Config data) {
 
   gMapy = ((struct Save *)gSfile)->Y;
   gMapx = ((struct Save *)gSfile)->X;
-
-  map = malloc(MAPX * (sizeof(void *)));
-  nmap = malloc(MAPX * (sizeof(void *)));
-  for (int64_t i = 0; i < MAPX; i++) {
-    map[i] = malloc((sizeof(struct Tyle)) * MAPY);
-  }
-  for (int64_t i = 0; i < MAPX; i++) {
-    nmap[i] = malloc((sizeof(struct Tyle)) * MAPY);
-  }
-
-  for (int64_t y = 0; y < MAPY; y++) {
-    for (int64_t x = 0; x < MAPX; x++) {
-      map[x][y].elivation = 0.5f;
-      map[x][y].temperature = 0.0f;
-      map[x][y].type = T_GRASS;
-    }
-  }
 }
 
 void saveSave(struct Config data) {
@@ -163,8 +167,8 @@ void renderchar(int64_t x, int64_t y, int64_t xpos, int64_t ypos) { //render a x
     }
 
     break;
-  default:
-    tylech = 'X';
+  case T_WALL:
+    tylech = ' ';
     break;
   }
   if ((y == cursorY) && (x == cursorX) && ((frame % 60) > 30)) {

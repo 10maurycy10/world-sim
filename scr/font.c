@@ -88,9 +88,7 @@ void F_init() {
   F_colors[0].blue = 0xFF;
   F_colors[0].green = 0xFF;
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED,
-                            SDL_WINDOWPOS_UNDEFINED, 1000, 1000,
-                            SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
+  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN );
 
   // SDL_FillRect( gScreenSurface, NULL, SDL_MapRGB( gScreenSurface->format,
   // 0x00, 0x00, 0x00 ) ); // RGB

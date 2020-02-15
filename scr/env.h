@@ -17,7 +17,7 @@ const char *gVerson = "0.12"; //game verson
 #define MAPY gMapy //map size
 #define MAPX gMapx
 //#define TEST
-#define SCRY (gWindowy - 2) //sr size
+#define SCRY (gWindowy - 2) //the size of the map vew port
 #define SCRX (gWindowx - 2)
 
 struct Raw {
@@ -29,6 +29,7 @@ struct Raw {
 };
 
 struct Save {
+  int64_t magic;//not cheked yet
   int64_t X;
   int64_t Y;
   struct Tyle data;

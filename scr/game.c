@@ -138,7 +138,14 @@ void gameloop() {
 
   F_ATTR(F_COLOR_PAIR(C_TEXT));
   F_printw("[*] making map", 0);
-  genaratemap();
+
+  int* seedblock = malloc(sizeof(int)*100);
+  int seed = 0;
+  for (int i = 0;i<100;i++)
+    seed += seedblock[i];
+  free(seedblock);
+  genaratemap(seed);
+
   F_ATTR(F_COLOR_PAIR(C_OK));
   F_printw("\t\t[DONE]\n", 0);
   F_ATTR(F_COLOR_PAIR(C_TEXT));
@@ -152,7 +159,7 @@ void gameloop() {
   profile(T_spin);
 
   while (running == RS_GAME) {
-    if (((CLOCKS_PER_SEC / 1000) * gMSPT) < (clock() - last)) {
+    if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - last)) {
       mspt = (clock() - last);
       last = clock();
       profile(T_tick);
@@ -176,12 +183,8 @@ void gameloop() {
       F_ATTR(C_TEXT);
       F_box(0, 0, SCRX + 1, SCRY + 1);
       F_ATTR(F_COLOR_PAIR(C_TEXT));
-      if (1000 / mspt < 60)
-        F_ATTR(C_FAIL);
-      else
-        F_ATTR(C_TEXT);
-      F_move(1, 0);
-      F_printw("fps max(phyical): %d", 1, (int)(1000 / mspt));
+      F_move(0, 0);
+      F_printw("\tfps: %d", 1, (int)(1000 / mspt));
       F_refresh();
       frame++;
       profile(T_spin);

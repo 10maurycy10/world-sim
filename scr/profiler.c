@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 int P_ctag;
 int times[256];
 int P_time;
