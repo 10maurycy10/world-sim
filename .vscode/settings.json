@@ -3,6 +3,8 @@
         "stdio.h": "c",
         "sdl_main.h": "c",
         "stdlib.h": "c",
-        "curses.h": "c"
+        "curses.h": "c",
+        "stdint.h": "c",
+        "math.h": "c"
     }
 }

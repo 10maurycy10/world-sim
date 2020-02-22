@@ -41,10 +41,19 @@ void genaratemap(int seed) { //reset the map
     for(int e = 0;e < MAPY/10+1;e++)
       ch[i][e] = rand()%1024;
 
+  int distancefrom00 = 0;
+  int distancefrom01 = 0;
+  int distancefrom11 = 0;
+  int distancefrom10 = 0;
+
   for (int64_t y = 0; y < MAPY; y++) {
     for (int64_t x = 0; x < MAPX; x++) {
       map[x][y].temperature = 0.0f;
-      if (1024/2 > ((ch[x/10][y/10]*(x%10)/10)+(ch[x/10+1][y/10]*(10-x%10)/10)+(ch[x/10][y/10]*(y%10)/10)+(ch[x/10][y/10+1]*(10-y%10)/10)/4))
+      distancefrom00 = x%10 + y%10;
+      distancefrom01 = x%10 + 10-(y%10);
+      distancefrom10 = 10-(x%10) + y%10;
+      distancefrom11 = 10-(x%10) + 10-(y%10);
+      if (1024/2 > ((ch[x][y] * distancefrom00 / 20))+(ch[x][y+1] * distancefrom01 / 20)+(ch[x+1][y] * distancefrom10 / 20)+(ch[x+1][y+1] * distancefrom11 / 20))
         map[x][y].type = T_GRASS;
       else
         map[x][y].type = T_STONE;

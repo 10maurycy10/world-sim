@@ -1,5 +1,5 @@
-#include "profiler.c"
 #include "toolkit.h"
+#include "profiler.c"
 #include <SDL.h>
 #include <SDL_main.h>
 #include <math.h>
@@ -22,6 +22,7 @@ enum RS { RS_CLOSE,
 enum colors {
   C_TEXT,
   C_OK,
+  C_YELOW,
   C_FAIL,
   C_HIGH,
   C_GRASS,
@@ -159,7 +160,7 @@ void gameloop() {
   profile(T_spin);
 
   while (running == RS_GAME) {
-    if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - last)) {
+    if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - 0)) {
       mspt = (clock() - last);
       last = clock();
       profile(T_tick);
@@ -180,11 +181,11 @@ void gameloop() {
       gameIo(key, dataconfig);
       profile(T_render);
       maprender();
-      F_ATTR(C_TEXT);
+      F_ATTR(C_DIM);
       F_box(0, 0, SCRX + 1, SCRY + 1);
       F_ATTR(F_COLOR_PAIR(C_TEXT));
       F_move(0, 0);
-      F_printw("\tfps: %d", 1, (int)(1000 / mspt));
+      F_printw("\tfps: %d", 1, (int)(1000 / (mspt + 1)));
       F_refresh();
       frame++;
       profile(T_spin);
@@ -201,8 +202,9 @@ void mainloop() {
 
     F_clear();
     F_move(0, 0);
-    F_ATTR(C_TEXT);
+    F_ATTR(C_DIM);
     F_box(0, 0, 15, 15);
+    F_ATTR(C_TEXT);
     F_move(2, 0);
     F_printw("world sim\n\n", 0);
     // F_printInt(pos,16);
@@ -253,7 +255,20 @@ void mainloop() {
             break;
           case 1:
             F_clear();
-            F_printw("world sim by MZ; verson: %s", 1, gVerson);
+            F_ATTR(C_TEXT);
+            F_printw("world sim by MZ; verson: %s\n\n\n", 1, gVerson);
+            F_ATTR(C_YELOW);
+            F_printw("\t         NOPE  \n",0);
+            F_printw("\t               \n",0);
+            F_printw("\tNOPE           \n",0);
+            F_printw("\t     NOPE      \n",0);
+            F_printw("\t          NOPE \n",0);
+            F_printw("\t               \n",0);
+            F_printw("\t               \n",0);
+            F_printw("\t               \n",0);
+            F_printw("\t     NOPE      ",0);
+            F_ATTR(C_DIM);
+            F_box(0,2,F_cursorx,F_cursory + 1);
             F_more();
             break;
           }
@@ -269,9 +284,7 @@ void game(SDL_RWops *configfile) {
 #ifdef P
 #ifdef TEST
   SDL_ShowSimpleMessageBox(
-      SDL_MESSAGEBOX_INFORMATION, "Test build",
-      "This is a test build of the program.\n It may be have a lot of bugs.",
-      NULL);
+      SDL_MESSAGEBOX_INFORMATION, "Test build","This is a test build of the program.\n It may be have a lot of bugs.",NULL);
 #endif
 #endif
 
@@ -279,17 +292,19 @@ void game(SDL_RWops *configfile) {
   F_init();
 
   // printf("F_initpair.\n");
-  F_initpair(C_TEXT, 255, 255, 255);
-  F_initpair(C_DIM, 0xA0, 0xA0, 0xA0);
+  F_initpair(C_TEXT, 255, 255, 255, 0,0,0);
+  F_initpair(C_DIM, 0xA0, 0xA0, 0xA0,0,0,0);
 
-  F_initpair(C_OK, 0, 0, 255);
-  F_initpair(C_FAIL, 255, 0, 0);
-  F_initpair(C_HIGH, 0xFF, 0x00, 0xFF);
+  F_initpair(C_OK, 0, 0, 255,0,0,0);
+  F_initpair(C_FAIL, 255, 0, 0,0,0,0);
+  F_initpair(C_HIGH, 0xFF, 0x00, 0xFF,0,0,0);
+  F_initpair(C_YELOW, 0xff, 0, 0xff,255,255,255);
 
-  F_initpair(C_WATER, 0, 255, 0);
-  F_initpair(C_MAGMA, 255, 0, 0);
-  F_initpair(C_GRASS, 0, 0, 255);
-  F_initpair(C_STONE, 255, 255, 255);
+
+  F_initpair(C_WATER, 0, 255, 0,0,0,0);
+  F_initpair(C_MAGMA, 255, 0, 0,0,0,0);
+  F_initpair(C_GRASS, 0, 0, 255,0,0,0);
+  F_initpair(C_STONE, 255, 255, 255,0,0,0);
   readconfig(configfile, &dataconfig);
   F_load(dataconfig.font);
 

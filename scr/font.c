@@ -12,13 +12,20 @@ int F_cursory = 1;
 SDL_Surface *F_font;
 SDL_Texture *fontT;
 SDL_Renderer *gRenderer;
-
+/*
 #define h_line 0xc4
 #define v_line 0xb3
 #define UL_corner 0xDA
 #define UR_corner 0xBF
 #define LL_corner 0xC0
-#define LR_corner 0xD9
+#define LR_corner 0xD9*/
+
+#define h_line 0xDB //boxy
+#define v_line 0xDB
+#define UL_corner 0xDB
+#define UR_corner 0xDB
+#define LL_corner 0xDB
+#define LR_corner 0xDB
 
 SDL_Surface *gScreenSurface;
 #define F_getmaxxy(x, y)              \
@@ -42,7 +49,7 @@ uint16_t color_pair;
 
 SDL_Renderer *gRenderer = NULL;
 #define NO_COL 256
-struct F_Color F_colors[NO_COL];
+struct F_Color F_colors[NO_COL][2];
 
 SDL_Surface *loadSurface(char *path) {
   SDL_Surface *loadedSurface = SDL_LoadBMP(path);
@@ -53,10 +60,14 @@ SDL_Surface *loadSurface(char *path) {
     return loadedSurface;
 }
 
-void F_initpair(int no, int fr, int fb, int fg) {
-  F_colors[no].red = fr;
-  F_colors[no].green = fg;
-  F_colors[no].blue = fb;
+void F_initpair(int no, int fr, int fb, int fg,int br, int bb, int bg) {
+  F_colors[no][0].red = fr;
+  F_colors[no][0].green = fg;
+  F_colors[no][0].blue = fb;
+
+  F_colors[no][1].red = br;
+  F_colors[no][1].green = bg;
+  F_colors[no][1].blue = bb;
 }
 
 SDL_Window *window = NULL;
@@ -79,14 +90,11 @@ void F_load(char *font) {
   F_catch(SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF));
 
   gBlack = SDL_CreateTextureFromSurface(gRenderer, s);
-  SDL_SetTextureColorMod(gBlack, 0, 0, 0);
   SDL_FreeSurface(s);
 }
 
 void F_init() {
-  F_colors[0].red = 0xFF; // set up COLOR
-  F_colors[0].blue = 0xFF;
-  F_colors[0].green = 0xFF;
+  F_initpair(0,255,255,255,0,0,0);
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
   window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
 
@@ -156,11 +164,12 @@ void F_MVputch(int x, int y, int c) {
 
   SDL_Rect scr = {fontX, fontY, F_x_size, F_y_size};
   SDL_Rect dst = {pixX, pixY, F_x_size, F_y_size};
-  SDL_Rect black = {F_x_size * 16 - 1, F_y_size * 16 - 1, F_x_size, F_y_size};
+  SDL_Rect black = {F_x_size * 16 - 1, F_y_size * 16 - 1, 1, 1};
 
   SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
+  SDL_SetTextureColorMod(fontT, F_colors[color_pair][0].red, F_colors[color_pair][0].green, F_colors[color_pair][0].blue);
+  SDL_SetTextureColorMod(gBlack, F_colors[color_pair][1].red, F_colors[color_pair][1].green, F_colors[color_pair][1].blue);
   F_catch(SDL_RenderCopy(gRenderer, gBlack, &black, &dst));
-  SDL_SetTextureColorMod(fontT, F_colors[color_pair].red, F_colors[color_pair].green, F_colors[color_pair].blue);
   F_catch(SDL_RenderCopy(gRenderer, fontT, &scr, &dst));
 }
 
