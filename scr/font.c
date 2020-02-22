@@ -75,6 +75,8 @@ SDL_Texture *gBlack;
 
 void F_load(char *font) {
   SDL_Surface *s = loadSurface(font);
+  SDL_Surface *black = SDL_CreateRGBSurface(0,1,1,8,0,0,0,0);
+  
 
   // s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
 
@@ -89,7 +91,8 @@ void F_load(char *font) {
   fontT = SDL_CreateTextureFromSurface(gRenderer, s);
   F_catch(SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF));
 
-  gBlack = SDL_CreateTextureFromSurface(gRenderer, s);
+  gBlack = SDL_CreateTextureFromSurface(gRenderer, black);
+  SDL_FreeSurface(black);
   SDL_FreeSurface(s);
 }
 
@@ -169,7 +172,7 @@ void F_MVputch(int x, int y, int c) {
   SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
   SDL_SetTextureColorMod(fontT, F_colors[color_pair][0].red, F_colors[color_pair][0].green, F_colors[color_pair][0].blue);
   SDL_SetTextureColorMod(gBlack, F_colors[color_pair][1].red, F_colors[color_pair][1].green, F_colors[color_pair][1].blue);
-  F_catch(SDL_RenderCopy(gRenderer, gBlack, &black, &dst));
+  F_catch(SDL_RenderCopy(gRenderer, gBlack, NULL, &dst));
   F_catch(SDL_RenderCopy(gRenderer, fontT, &scr, &dst));
 }
 
