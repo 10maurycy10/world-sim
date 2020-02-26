@@ -191,11 +191,10 @@ void renderchar(int64_t x, int64_t y, int64_t xpos, int64_t ypos) { //render a x
 }
 
 void maprender() {
-  for (int64_t x = 0; x < SCRX; x++)
-    for (int64_t y = 0; y < SCRY; y++)
+  for (int32_t x = 0; x < SCRX; x++)
+    for (int32_t y = 0; y < SCRY; y++)
       if (((x + cursorX - SCRX / 2) < MAPX) && ((x + cursorX - SCRX / 2) > -1))
         if (((y + cursorY - SCRY / 2) < MAPY) && ((y + cursorY - SCRY / 2) > -1))
-          //renderchar(x + cursorX - SCRX/2,y + cursorY - SCRY/2,x+1,y+1);
           renderchar(x + cursorX - SCRX / 2, y + cursorY - SCRY / 2, x, y);
         else
           F_MVputch(x + 1, y + 1, ' ');

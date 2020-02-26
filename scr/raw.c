@@ -24,7 +24,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
       matchcol(buffer, &i, sizeb);
 
       raw->stoneMelt = readfloat(buffer, &i, sizeb, -1, 1);
-      F_printw("  stoneMelt: %f\n", raw->stoneMelt);
+      //F_printw("  stoneMelt: %f\n", raw->stoneMelt);
 
       //printf("config.readconfig.savefileread: i : %d , curch: '%c' \n",i,buffer[i]);
       skipcoments(buffer, &i, sizeb);
@@ -38,7 +38,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
         matchcol(buffer, &i, sizeb);
 
         raw->grassRegrow = readint(buffer, &i, sizeb, 0, __INT16_MAX__);
-        F_printw("  grassregrow: %d\n", 1, (int)(raw->grassRegrow));
+        //F_printw("  grassregrow: %d\n", 1, (int)(raw->grassRegrow));
 
         skipcoments(buffer, &i, sizeb);
         if (!stringmatch(buffer, &i, "]", sizeb)) {
@@ -50,7 +50,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
           matchcol(buffer, &i, sizeb);
 
           raw->seaLeval = readfloat(buffer, &i, sizeb, 0, __INT16_MAX__);
-          F_printw("  seaLeval: %f\n", 1, raw->seaLeval);
+          //F_printw("  seaLeval: %f\n", 1, raw->seaLeval);
 
           skipcoments(buffer, &i, sizeb);
           if (!stringmatch(buffer, &i, "]", sizeb)) {
@@ -62,7 +62,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
             matchcol(buffer, &i, sizeb);
 
             raw->MSPT = readint(buffer, &i, sizeb, 0, __INT16_MAX__);
-            F_printw("  MSPT: %x\n", 1, (int)(raw->MSPT));
+            //F_printw("  MSPT: %x\n", 1, (int)(raw->MSPT));
 
             skipcoments(buffer, &i, sizeb);
             if (!stringmatch(buffer, &i, "]", sizeb)) {
@@ -74,7 +74,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
               matchcol(buffer, &i, sizeb);
 
               raw->lava = readint(buffer, &i, sizeb, 0, __INT16_MAX__);
-              F_printw("  lava: %x\n", 1, (int)(raw->lava));
+              //F_printw("  lava: %x\n", 1, (int)(raw->lava));
 
               skipcoments(buffer, &i, sizeb);
               if (!stringmatch(buffer, &i, "]", sizeb)) {

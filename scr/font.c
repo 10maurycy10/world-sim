@@ -12,20 +12,14 @@ int F_cursory = 1;
 SDL_Surface *F_font;
 SDL_Texture *fontT;
 SDL_Renderer *gRenderer;
-/*
+
 #define h_line 0xc4
 #define v_line 0xb3
 #define UL_corner 0xDA
 #define UR_corner 0xBF
 #define LL_corner 0xC0
-#define LR_corner 0xD9*/
-
-#define h_line 0xDB //boxy
-#define v_line 0xDB
-#define UL_corner 0xDB
-#define UR_corner 0xDB
-#define LL_corner 0xDB
-#define LR_corner 0xDB
+#define LR_corner 0xD9
+#define f_block 0xDB
 
 SDL_Surface *gScreenSurface;
 #define F_getmaxxy(x, y)              \
@@ -60,7 +54,7 @@ SDL_Surface *loadSurface(char *path) {
     return loadedSurface;
 }
 
-void F_initpair(int no, int fr, int fb, int fg,int br, int bb, int bg) {
+void F_initpair(int no, int fr, int fb, int fg, int br, int bb, int bg) {
   F_colors[no][0].red = fr;
   F_colors[no][0].green = fg;
   F_colors[no][0].blue = fb;
@@ -75,8 +69,7 @@ SDL_Texture *gBlack;
 
 void F_load(char *font) {
   SDL_Surface *s = loadSurface(font);
-  SDL_Surface *black = SDL_CreateRGBSurface(0,1,1,8,0,0,0,0);
-  
+  SDL_Surface *black = SDL_CreateRGBSurface(0, 1, 1, 8, 0, 0, 0, 0);
 
   // s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
 
@@ -97,16 +90,13 @@ void F_load(char *font) {
 }
 
 void F_init() {
-  F_initpair(0,255,255,255,0,0,0);
+  F_initpair(0, 255, 255, 255, 0, 0, 0);
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
-
-  // SDL_FillRect( gScreenSurface, NULL, SDL_MapRGB( gScreenSurface->format,
-  // 0x00, 0x00, 0x00 ) ); // RGB
+  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL );
   SDL_UpdateWindowSurface(window);
   gScreenSurface = SDL_GetWindowSurface(window);
   // SDL_GetWindowSize(window,(int*)&gWindowx,(int*)&gWindowy);
-  gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
   SDL_RenderClear(gRenderer);
 }
 
@@ -117,11 +107,8 @@ void F_end() {
 }
 
 void F_refresh() {
-  // SDL_RenderCopy(gRenderer,fontT, NULL , NULL);
-  // SDL_RenderPresent(gRenderer);
-  // F_catch(SDL_UpdateWindowSurface(window));
   SDL_RenderPresent(gRenderer);
-  SDL_Delay(0);
+  //SDL_Delay(0);
   F_catch(SDL_RenderClear(gRenderer));
 }
 
@@ -169,7 +156,7 @@ void F_MVputch(int x, int y, int c) {
   SDL_Rect dst = {pixX, pixY, F_x_size, F_y_size};
   SDL_Rect black = {F_x_size * 16 - 1, F_y_size * 16 - 1, 1, 1};
 
-  SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
+  //SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
   SDL_SetTextureColorMod(fontT, F_colors[color_pair][0].red, F_colors[color_pair][0].green, F_colors[color_pair][0].blue);
   SDL_SetTextureColorMod(gBlack, F_colors[color_pair][1].red, F_colors[color_pair][1].green, F_colors[color_pair][1].blue);
   F_catch(SDL_RenderCopy(gRenderer, gBlack, NULL, &dst));
@@ -202,7 +189,7 @@ void F_printInt(int in, int base) {
   F_cursorx++;
 }
 
-void F_printw(char *x, int n, ...) {
+void F_printw(char *x,int b, int n, ...) {
   va_list a;
   va_start(a, n);
 
@@ -210,24 +197,31 @@ void F_printw(char *x, int n, ...) {
     if (x[i] == '%') {
       i++;
       switch (x[i]) {
-      case 's':;
-        char *str = va_arg(a, char *);
-        for (int e = 0; str[e]; e++) {
-          F_putch(str[e]);
-        }
-        break;
-      case 'd':;
-        int ind = va_arg(a, int);
-        F_printInt(ind, 10);
-        break;
-      case 'x':;
-        int inx = va_arg(a, int);
-        F_printInt(inx, 16);
-        break;
-      case 'f':;
-        int inf = va_arg(a, double);
-        F_printInt(floor(inf), 16);
-        break;
+        case 's':;
+          char *str = va_arg(a, char *);
+          for (int e = 0; str[e]; e++) {
+            if ((str[e] != '\t') && (str[e] != '\n'))
+              F_putch(str[e]);
+            else
+              F_cursorx++;
+            if (str[e - 1] == '\n') {
+              F_cursory++;
+              F_cursorx = b;
+            }
+          }
+          break;
+        case 'd':;
+          int ind = va_arg(a, int);
+          F_printInt(ind, 10);
+          break;
+        case 'x':;
+          int inx = va_arg(a, int);
+          F_printInt(inx, 16);
+          break;
+        case 'f':;
+          int inf = va_arg(a, double);
+          F_printInt(floor(inf), 16);
+          break;
       }
       i++;
     } else {
@@ -238,23 +232,50 @@ void F_printw(char *x, int n, ...) {
       i++;
       if (x[i - 1] == '\n') {
         F_cursory++;
-        F_cursorx = 0;
+        F_cursorx = b;
       }
     }
   }
 }
 
-void F_box(int sx, int sy, int ex, int ey) {
-  F_MVputch(sx, sy, UL_corner);
-  F_MVputch(ex, sy, UR_corner);
-  F_MVputch(sx, ey, LL_corner);
-  F_MVputch(ex, ey, LR_corner);
-  for (int i = sx + 1; i < ex; i++)
-    F_MVputch(i, sy, h_line);
-  for (int i = sx + 1; i < ex; i++)
-    F_MVputch(i, ey, h_line);
-  for (int i = sy + 1; i < ey; i++)
-    F_MVputch(sx, i, v_line);
-  for (int i = sy + 1; i < ey; i++)
-    F_MVputch(ex, i, v_line);
+void F_box(int sx, int sy, int ex, int ey, bool blocky) {
+  if (blocky) {
+    F_MVputch(sx, sy, f_block);
+    F_MVputch(ex, sy, f_block);
+    F_MVputch(sx, ey, f_block);
+    F_MVputch(ex, ey, f_block);
+    for (int i = sx + 1; i < ex; i++)
+      F_MVputch(i, sy, f_block);
+    for (int i = sx + 1; i < ex; i++)
+      F_MVputch(i, ey, f_block);
+    for (int i = sy + 1; i < ey; i++)
+      F_MVputch(sx, i, f_block);
+    for (int i = sy + 1; i < ey; i++)
+      F_MVputch(ex, i, f_block);
+  } else {
+    F_MVputch(sx, sy, UL_corner);
+    F_MVputch(ex, sy, UR_corner);
+    F_MVputch(sx, ey, LL_corner);
+    F_MVputch(ex, ey, LR_corner);
+    for (int i = sx + 1; i < ex; i++)
+      F_MVputch(i, sy, h_line);
+    for (int i = sx + 1; i < ex; i++)
+      F_MVputch(i, ey, h_line);
+    for (int i = sy + 1; i < ey; i++)
+      F_MVputch(sx, i, v_line);
+    for (int i = sy + 1; i < ey; i++)
+      F_MVputch(ex, i, v_line);
+  }
+}
+
+void F_mbox(char *text) {
+  int maxX, maxY;
+  F_getmaxxy(maxX, maxY);
+
+  F_move(maxX / 2, maxY / 2);
+  F_printw("%s",maxX / 2,1, text);
+
+  F_box(maxX / 2 - 1, maxY / 2 - 1, F_cursorx, F_cursory + 1, false);
+
+  F_more();
 }

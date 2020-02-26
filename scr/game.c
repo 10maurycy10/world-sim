@@ -29,8 +29,7 @@ enum colors {
   C_STONE,
   C_MAGMA,
   C_WATER,
-  C_DIM
-};
+  C_DIM };
 
 void gend();
 #include "env.h"
@@ -56,8 +55,7 @@ enum controls {
 
   K_load = SDLK_o,
   K_save = SDLK_p,
-  K_debug = SDLK_ESCAPE
-};
+  K_debug = SDLK_ESCAPE };
 
 int64_t last;
 int running;
@@ -116,8 +114,7 @@ bool gameIo(int64_t key, struct Config data) {
     break;
 
   case K_debug:
-    running = RS_MAIN;
-    F_catch(1);
+    F_mbox("123");
   }
 
   return 1;
@@ -130,15 +127,15 @@ void gameloop() {
   F_clear();
   F_move(0, 0);
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] loading objects...", 0);
+  F_printw("[*] loading objects...", 0,0);
   readraw(dataconfig.rawfile, &rawdata);
   loadObj(&rawdata);
   SDL_Event e;
   F_ATTR(F_COLOR_PAIR(C_OK));
-  F_printw("\t\t[DONE]\n", 0);
+  F_printw("\t\t[DONE]\n", 0,0);
 
   F_ATTR(F_COLOR_PAIR(C_TEXT));
-  F_printw("[*] making map", 0);
+  F_printw("[*] making map", 0,0);
 
   int* seedblock = malloc(sizeof(int)*100);
   int seed = 0;
@@ -148,7 +145,7 @@ void gameloop() {
   genaratemap(seed);
 
   F_ATTR(F_COLOR_PAIR(C_OK));
-  F_printw("\t\t[DONE]\n", 0);
+  F_printw("\t\t[DONE]\n", 0,0);
   F_ATTR(F_COLOR_PAIR(C_TEXT));
   F_getmaxxy(gWindowx, gWindowy);
   // printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
@@ -160,7 +157,7 @@ void gameloop() {
   profile(T_spin);
 
   while (running == RS_GAME) {
-    if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - 0)) {
+    //if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - 0)) {
       mspt = (clock() - last);
       last = clock();
       profile(T_tick);
@@ -177,20 +174,22 @@ void gameloop() {
       }
       // F_MVputch(0,0,'a');
       // F_MVputch(1,1,'b');
-      F_clear();
+      //F_clear();
       gameIo(key, dataconfig);
-      profile(T_render);
+      profile(T_draw);
       maprender();
       F_ATTR(C_DIM);
-      F_box(0, 0, SCRX + 1, SCRY + 1);
+      F_box(0, 0, SCRX + 1, SCRY + 1, true);
       F_ATTR(F_COLOR_PAIR(C_TEXT));
       F_move(0, 0);
-      F_printw("\tfps: %d", 1, (int)(1000 / (mspt + 1)));
+      F_printw("\tfps: %d",0, 1, (int)(1000 / (mspt + 1)));
+      //SDL_Delay(10);
+      profile(T_present);
       F_refresh();
       frame++;
       profile(T_spin);
     }
-  }
+  //}
 }
 
 void mainloop() {
@@ -200,34 +199,33 @@ void mainloop() {
 
   while (running == RS_MAIN) {
 
-    F_clear();
     F_move(0, 0);
     F_ATTR(C_DIM);
-    F_box(0, 0, 15, 15);
+    F_box(0, 0, 15, 15,true);
     F_ATTR(C_TEXT);
     F_move(2, 0);
-    F_printw("world sim\n\n", 0);
+    F_printw("world sim\n\n", 0,0);
     // F_printInt(pos,16);
     if (pos == 0) {
       F_ATTR(C_TEXT);
-      F_printw("\t\tworld sim\n", 0);
+      F_printw("\t\tworld sim\n", 0,0);
     } else {
       F_ATTR(C_DIM);
-      F_printw("\t\tworld sim\n", 0);
+      F_printw("\t\tworld sim\n",0, 0);
     }
     if (pos == 1) {
       F_ATTR(C_TEXT);
-      F_printw("\t\tabout\n", 0);
+      F_printw("\t\tabout\n", 0,0);
     } else {
       F_ATTR(C_DIM);
-      F_printw("\t\tabout\n", 0);
+      F_printw("\t\tabout\n", 0,0);
     }
     if (pos == 2) {
       F_ATTR(C_TEXT);
-      F_printw("\t\texit\n", 0);
+      F_printw("\t\texit\n", 0,0);
     } else {
       F_ATTR(C_DIM);
-      F_printw("\t\texit\n", 0);
+      F_printw("\t\texit\n", 0,0);
     }
     F_refresh();
     SDL_Delay(15);
@@ -254,28 +252,28 @@ void mainloop() {
             running = RS_CLOSE;
             break;
           case 1:
-            F_clear();
-            F_ATTR(C_TEXT);
-            F_printw("world sim by MZ; verson: %s\n\n\n", 1, gVerson);
+            F_move(0,0);
             F_ATTR(C_YELOW);
-            F_printw("\t         NOPE  \n",0);
-            F_printw("\t               \n",0);
-            F_printw("\tNOPE           \n",0);
-            F_printw("\t     NOPE      \n",0);
-            F_printw("\t          NOPE \n",0);
-            F_printw("\t               \n",0);
-            F_printw("\t               \n",0);
-            F_printw("\t               \n",0);
-            F_printw("\t     NOPE      ",0);
+            F_printw("\n\t         NOPE  \n",0,0);
+            F_printw("\t               \n",0,0);
+            F_printw("\tNOPE           \n",0,0);
+            F_printw("\t     NOPE      \n",0,0);
+            F_printw("\t          NOPE \n",0,0);
+            F_printw("\t               \n",0,0);
+            F_printw("\t               \n",0,0);
+            F_printw("\t               \n",0,0);
+            F_printw("\t     NOPE      ",0,0);
             F_ATTR(C_DIM);
-            F_box(0,2,F_cursorx,F_cursory + 1);
-            F_more();
+            F_box(0,0,F_cursorx,F_cursory + 1,false);
+            F_ATTR(C_TEXT);
+            F_mbox("world sim\n  by M.Z.  \n");
             break;
           }
           break;
         }
       }
     }
+    F_clear();
   }
 }
 
@@ -336,5 +334,10 @@ void gend() {
   printTag("init", T_init);
   printTag("in", T_input);
   printTag("tick", T_tick);
+
+  printTag("draw", T_draw);
+  printTag("present", T_present);
+
+
   printf("By nVoidPointer (nvoidpointer@gmail.com) (buggybugs@catty)\n");
 }

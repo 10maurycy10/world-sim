@@ -6,13 +6,15 @@ int P_time;
 
 enum tags { T_init,
             T_spin,
-            T_render,
+            T_present,
             T_draw,
             T_input,
             T_tick };
 
 void profile(int tag) {
+  times[P_ctag] *= 29;
   times[P_ctag] += clock() - P_time;
+  times[P_ctag] /= 30;
   P_time = clock();
   P_ctag = tag;
 }
