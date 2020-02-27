@@ -157,7 +157,7 @@ void gameloop() {
   profile(T_spin);
 
   while (running == RS_GAME) {
-    //if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - 0)) {
+    if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - last)) {
       mspt = (clock() - last);
       last = clock();
       profile(T_tick);
@@ -189,15 +189,16 @@ void gameloop() {
       frame++;
       profile(T_spin);
     }
-  //}
+  }
 }
 
 void mainloop() {
-  F_clear();
+  //F_clear();
   SDL_Event e;
   int pos = 0;
 
   while (running == RS_MAIN) {
+  F_clear();
 
     F_move(0, 0);
     F_ATTR(C_DIM);

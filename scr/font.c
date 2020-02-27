@@ -9,8 +9,10 @@ int F_x_size = 40;
 int F_y_size = 80;
 int F_cursorx = 1;
 int F_cursory = 1;
-SDL_Texture *fontT;
-SDL_Renderer *gRenderer;
+
+SDL_Surface *gFont;
+SDL_Surface *gScreenSurface;
+SDL_Surface *gScreenBuffer;
 
 #define h_line 0xc4
 #define v_line 0xb3
@@ -20,7 +22,6 @@ SDL_Renderer *gRenderer;
 #define LR_corner 0xD9
 #define f_block 0xDB
 
-SDL_Surface *gScreenSurface;
 #define F_getmaxxy(x, y)              \
   do {                                \
     x = gScreenSurface->w / F_x_size; \
@@ -40,7 +41,6 @@ SDL_Surface *gScreenSurface;
 uint16_t color_pair;
 #define F_ATTR(x) (color_pair = x)
 
-SDL_Renderer *gRenderer = NULL;
 #define NO_COL 256
 struct F_Color F_colors[NO_COL][2];
 
@@ -64,54 +64,43 @@ void F_initpair(int no, int fr, int fb, int fg, int br, int bb, int bg) {
 }
 
 SDL_Window *window = NULL;
-SDL_Texture *gBlack;
 
 void F_load(char *font) {
   SDL_Surface *s = loadSurface(font);
-  SDL_Surface *black = SDL_CreateRGBSurface(0, 1, 1, 8, 0, 0, 0, 0);
 
   s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
+  SDL_SetSurfaceBlendMode(gScreenBuffer,SDL_BLENDMODE_MOD);
 
-  Uint32 colorKey = SDL_MapRGB(s->format, 0xff, 0, 0);
+  Uint32 colorKey = SDL_MapRGB(gScreenSurface->format, 0xff, 0, 0);
   F_catch(SDL_SetColorKey(s, SDL_TRUE, colorKey));
 
   int charH = (s->h) / 16;
   int charW = (s->w) / 16;
   F_x_size = charW;
   F_y_size = charH;
-  // printf("fsizeX : %d, fsizey : %d",F_x_size , F_y_size);
-  //scrbuffer = SDL_CreateRGBSurface(0, gScreenSurface->w, gScreenSurface->h, 8, 0, 0, 0, 0);
-  //F_catch(SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF));
 
+  gScreenBuffer = SDL_CreateRGBSurfaceWithFormat(0,gScreenSurface->w,gScreenSurface->h,8,SDL_PIXELFORMAT_RGB332);
 
-  fontT = SDL_CreateTextureFromSurface(gRenderer, s);
-  //gBlack = black;
-  gBlack = SDL_CreateTextureFromSurface(gRenderer, black);
-  SDL_FreeSurface(black);
-  SDL_FreeSurface(s);
+  gScreenBuffer = gScreenSurface;
+
+  gFont = s;
 }
 
 void F_init() {
   F_initpair(0, 255, 255, 255, 0, 0, 0);
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN);
   SDL_UpdateWindowSurface(window);
   gScreenSurface = SDL_GetWindowSurface(window);
-  gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 }
 
 void F_end() {
-  SDL_DestroyTexture(fontT);
-  //SDL_DestroyRenderer(gRenderer);
   SDL_Quit();
 }
 
 void F_refresh() {
-  //SDL_BlitScaled(scrbuffer,Null,gScreenSurface,Null);
-  //SDL_UpdateWindowSurface(window);
-  SDL_RenderPresent(gRenderer);
-  //SDL_Delay(0);
-  F_catch(SDL_RenderClear(gRenderer));
+  SDL_BlitSurface(gScreenBuffer,NULL,gScreenSurface,NULL);
+  SDL_UpdateWindowSurface(window);
 }
 
 void F_move(int x, int y) {
@@ -120,9 +109,7 @@ void F_move(int x, int y) {
 }
 
 void F_clear() {
-  // clear();
-  //SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
-  //F_catch(SDL_RenderClear(gRenderer));
+  SDL_FillRect(gScreenBuffer,NULL,SDL_MapRGB(gScreenBuffer -> format,0,0,0));
   F_move(0, 0);
 }
 
@@ -138,8 +125,10 @@ bool F_gete(SDL_Event *e) { // polles for a event : true if got a event, false
     } else if (e->type == SDL_WINDOWEVENT) {
       switch(e->window.event) {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
-          gScreenSurface -> w = e -> window.data1;
-          gScreenSurface -> h = e -> window.data2;
+          //gScreenSurface -> w = e -> window.data1;
+          //gScreenSurface -> h = e -> window.data2;
+          SDL_FreeSurface(gScreenBuffer);
+          gScreenBuffer = SDL_CreateRGBSurfaceWithFormat(0,gScreenSurface->w,gScreenSurface->h,8,SDL_PIXELFORMAT_RGB332);
           F_getmaxxy(gWindowx,gWindowy);
           printf("resize\n");
           break;
@@ -165,17 +154,11 @@ void F_MVputch(int x, int y, int c) {
 
   SDL_Rect scr = {fontX, fontY, F_x_size, F_y_size};
   SDL_Rect dst = {pixX, pixY, F_x_size, F_y_size};
-  //SDL_Rect black = {0,0, 1, 1};
 
-  //SDL_BlitScaled(gBlack,&black,scrbuffer,&dst);
-  //SDL_BlitScaled(gFont,&scr,scrbuffer,&dst);
-  //SDL_texture(gFont,Null,gScreenSurface,Null);
+  SDL_FillRect(gScreenBuffer,&dst,SDL_MapRGB(gScreenBuffer -> format,F_colors[color_pair][1].red,F_colors[color_pair][1].green,F_colors[color_pair][1].blue));
+  SDL_SetSurfaceColorMod(gFont,F_colors[color_pair][0].red,F_colors[color_pair][0].green,F_colors[color_pair][0].blue);
+  SDL_BlitScaled(gFont,&scr,gScreenBuffer,&dst);
 
-  SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
-  SDL_SetTextureColorMod(fontT, F_colors[color_pair][0].red, F_colors[color_pair][0].green, F_colors[color_pair][0].blue);
-  F_catch(SDL_RenderCopy(gRenderer, gBlack, NULL, &dst));
-  SDL_SetTextureColorMod(gBlack, F_colors[color_pair][1].red, F_colors[color_pair][1].green, F_colors[color_pair][1].blue);
-  F_catch(SDL_RenderCopy(gRenderer, fontT, &scr, &dst));
 }
 
 void F_putch(int c) {
