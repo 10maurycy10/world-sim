@@ -9,7 +9,6 @@ int F_x_size = 40;
 int F_y_size = 80;
 int F_cursorx = 1;
 int F_cursory = 1;
-SDL_Surface *F_font;
 SDL_Texture *fontT;
 SDL_Renderer *gRenderer;
 
@@ -71,7 +70,7 @@ void F_load(char *font) {
   SDL_Surface *s = loadSurface(font);
   SDL_Surface *black = SDL_CreateRGBSurface(0, 1, 1, 8, 0, 0, 0, 0);
 
-  // s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
+  s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
 
   Uint32 colorKey = SDL_MapRGB(s->format, 0xff, 0, 0);
   F_catch(SDL_SetColorKey(s, SDL_TRUE, colorKey));
@@ -81,9 +80,12 @@ void F_load(char *font) {
   F_x_size = charW;
   F_y_size = charH;
   // printf("fsizeX : %d, fsizey : %d",F_x_size , F_y_size);
-  fontT = SDL_CreateTextureFromSurface(gRenderer, s);
-  F_catch(SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF));
+  //scrbuffer = SDL_CreateRGBSurface(0, gScreenSurface->w, gScreenSurface->h, 8, 0, 0, 0, 0);
+  //F_catch(SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF));
 
+
+  fontT = SDL_CreateTextureFromSurface(gRenderer, s);
+  //gBlack = black;
   gBlack = SDL_CreateTextureFromSurface(gRenderer, black);
   SDL_FreeSurface(black);
   SDL_FreeSurface(s);
@@ -92,21 +94,21 @@ void F_load(char *font) {
 void F_init() {
   F_initpair(0, 255, 255, 255, 0, 0, 0);
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP | SDL_WINDOW_OPENGL );
+  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   SDL_UpdateWindowSurface(window);
   gScreenSurface = SDL_GetWindowSurface(window);
-  // SDL_GetWindowSize(window,(int*)&gWindowx,(int*)&gWindowy);
   gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-  SDL_RenderClear(gRenderer);
 }
 
 void F_end() {
   SDL_DestroyTexture(fontT);
-  SDL_DestroyRenderer(gRenderer);
+  //SDL_DestroyRenderer(gRenderer);
   SDL_Quit();
 }
 
 void F_refresh() {
+  //SDL_BlitScaled(scrbuffer,Null,gScreenSurface,Null);
+  //SDL_UpdateWindowSurface(window);
   SDL_RenderPresent(gRenderer);
   //SDL_Delay(0);
   F_catch(SDL_RenderClear(gRenderer));
@@ -119,8 +121,8 @@ void F_move(int x, int y) {
 
 void F_clear() {
   // clear();
-  SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
-  F_catch(SDL_RenderClear(gRenderer));
+  //SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
+  //F_catch(SDL_RenderClear(gRenderer));
   F_move(0, 0);
 }
 
@@ -133,8 +135,17 @@ bool F_gete(SDL_Event *e) { // polles for a event : true if got a event, false
       _Exit(0);
     } else if (e->type == SDL_KEYDOWN) {
       return true;
+    } else if (e->type == SDL_WINDOWEVENT) {
+      switch(e->window.event) {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+          gScreenSurface -> w = e -> window.data1;
+          gScreenSurface -> h = e -> window.data2;
+          F_getmaxxy(gWindowx,gWindowy);
+          printf("resize\n");
+          break;
+      }
     }
-  };
+  }
   return false;
 }
 
@@ -154,12 +165,16 @@ void F_MVputch(int x, int y, int c) {
 
   SDL_Rect scr = {fontX, fontY, F_x_size, F_y_size};
   SDL_Rect dst = {pixX, pixY, F_x_size, F_y_size};
-  SDL_Rect black = {F_x_size * 16 - 1, F_y_size * 16 - 1, 1, 1};
+  //SDL_Rect black = {0,0, 1, 1};
 
-  //SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
+  //SDL_BlitScaled(gBlack,&black,scrbuffer,&dst);
+  //SDL_BlitScaled(gFont,&scr,scrbuffer,&dst);
+  //SDL_texture(gFont,Null,gScreenSurface,Null);
+
+  SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
   SDL_SetTextureColorMod(fontT, F_colors[color_pair][0].red, F_colors[color_pair][0].green, F_colors[color_pair][0].blue);
-  SDL_SetTextureColorMod(gBlack, F_colors[color_pair][1].red, F_colors[color_pair][1].green, F_colors[color_pair][1].blue);
   F_catch(SDL_RenderCopy(gRenderer, gBlack, NULL, &dst));
+  SDL_SetTextureColorMod(gBlack, F_colors[color_pair][1].red, F_colors[color_pair][1].green, F_colors[color_pair][1].blue);
   F_catch(SDL_RenderCopy(gRenderer, fontT, &scr, &dst));
 }
 

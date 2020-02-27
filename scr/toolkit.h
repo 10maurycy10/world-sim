@@ -8,6 +8,7 @@
 #define bool _Bool
 #define true 1
 #define false 0
+#define Null ((void*)0)
 
 #define assert(x) \
   do {            \
