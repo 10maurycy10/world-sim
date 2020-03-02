@@ -178,7 +178,7 @@ void readconfig(SDL_RWops *file, struct Config *configstruct) {
       skipcoments(buffer, &i, size);
       strp = getstrtag(buffer, &i, size);
       //printf("savefile: %s\n",strp);
-      configstruct->savefile = SDL_RWFromFile(strp, "r+b");
+      configstruct->savefile = SDL_RWFromFile(strp, "rb+");
       free(strp);
 
       //printf("config.readconfig.savefileread: i : %d , curch: '%c' \n",i,buffer[i]);

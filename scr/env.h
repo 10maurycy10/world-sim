@@ -10,7 +10,6 @@ int64_t gWindowx;
 int64_t gWindowy;
 
 char *gRFile; //raw file over ride
-char *gSfile;
 
 const char *gVerson = "0.12"; //game verson
 

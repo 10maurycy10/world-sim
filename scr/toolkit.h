@@ -9,6 +9,7 @@
 #define true 1
 #define false 0
 #define Null ((void*)0)
+#define OFFSET(val,offset) (*(&val + offset))
 
 #define assert(x) \
   do {            \

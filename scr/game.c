@@ -104,7 +104,10 @@ bool gameIo(int64_t key, struct Config data) {
       break;
 
     case K_debug:
-      F_mbox("123");
+      F_move(0,20);
+      F_printw("type: %d, ",0,1,map[cursorX][cursorY].type);
+      F_printw("data: %d, ",0,1,map[cursorX][cursorY].data.mosstimer);
+      F_more();
   }
 
   return 1;
@@ -148,7 +151,7 @@ void gameloop() {
   profile(T_spin);
 
   while (running == RS_GAME) {
-    if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - lastFrame)) {
+    if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - lastTick)) {
       lastTick = clock();
       profile(T_tick);
       ticktyles();
