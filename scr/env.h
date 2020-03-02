@@ -21,26 +21,18 @@ const char *gVerson = "0.12"; //game verson
 #define SCRX (gWindowx - 2)
 
 struct Raw {
-  double stoneMelt;    //normlized temp
+  int stoneMelt;    //normlized temp
   int64_t grassRegrow; //time
   double seaLeval;     //normlized elivatin
   int64_t MSPT;        //milli secons per tick
   int64_t lava;
 };
 
-struct Save {
-  int64_t magic;//not cheked yet
-  int64_t X;
-  int64_t Y;
-  struct Tyle data;
-};
 
-struct Tyle **map;
-struct Tyle **nmap;
 
 void loadObj(struct Raw *data) {
   gSealeval = data->seaLeval;
-  gLavatemp = .5;
+  gLavatemp = 2000;
   gGrasregrow = data->grassRegrow;
   gLavaPlaceTemp = data->lava;
   gMSPT = data->MSPT;

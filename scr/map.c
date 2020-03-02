@@ -8,6 +8,24 @@ enum S { T_WALL,
          T_STONE,
 };
 
+struct Tyle {
+  int temperature; // 1000 = 0c  1100 = 100c
+  union Data {
+    int mosstimer;
+  } data;
+  int64_t type;
+};
+
+struct Save {
+  int64_t magic; //not cheked yet
+  int64_t X;
+  int64_t Y;
+  struct Tyle data;
+};
+
+struct Tyle **map;
+struct Tyle **nmap;
+
 void genaratemap(int seed) { //reset the map
 
   srand(seed);
@@ -35,11 +53,12 @@ void genaratemap(int seed) { //reset the map
     nmap[i] = malloc((sizeof(struct Tyle)) * MAPY);
   }
 
-  int ch [MAPX+1][MAPY+1];
+  int ch[MAPX / 30 + 1][MAPY / 30 + 1];
 
-  for(int i = 0;i < MAPX/10+1;i++)
-    for(int e = 0;e < MAPY/10+1;e++)
-      ch[i][e] = rand()%1024;
+  for (int i = 0; i < MAPX / 30 + 1; i++)
+    for (int e = 0; e < MAPY / 30 + 1; e++) {
+      ch[i][e] = rand() % 2;
+    }
 
   int distancefrom00 = 0;
   int distancefrom01 = 0;
@@ -48,22 +67,26 @@ void genaratemap(int seed) { //reset the map
 
   for (int64_t y = 0; y < MAPY; y++) {
     for (int64_t x = 0; x < MAPX; x++) {
-      map[x][y].temperature = 0.0f;
-      distancefrom00 = x%10 + y%10;
-      distancefrom01 = x%10 + 10-(y%10);
-      distancefrom10 = 10-(x%10) + y%10;
-      distancefrom11 = 10-(x%10) + 10-(y%10);
-      if (1024/2 > ((ch[x][y] * distancefrom00 / 20))+(ch[x][y+1] * distancefrom01 / 20)+(ch[x+1][y] * distancefrom10 / 20)+(ch[x+1][y+1] * distancefrom11 / 20))
-        map[x][y].type = T_GRASS;
-      else
+      map[x][y].temperature = 1000;
+      distancefrom00 = x % 30 + y % 30;
+      distancefrom01 = x % 30 + 30 - ((y) % 30);
+      distancefrom10 = 30 - ((x) % 30) + y % 30;
+      distancefrom11 = 30 - ((x) % 30) + 30 - ((y) % 30);
+      int effect00 = ch[x / 30][y / 30] * 40 / (distancefrom00 + 1),
+          effect01 = ch[x / 30 + 1][y / 30] * 40 / (distancefrom01 + 1),
+          effect10 = ch[x / 30][y / 30 + 1] * 40 / (distancefrom10 + 1),
+          effect11 = ch[x / 30 + 1][y / 30 + 1] * 40 / (distancefrom11 + 1);
+      if (0 < ch[x/10][y/10])
         map[x][y].type = T_STONE;
+      else
+        map[x][y].type = T_GRASS;
     }
   }
   free(ch);
-  for (int64_t y = 1; y < (MAPY-1); y++) {
-    for (int64_t x = 1; x < (MAPX-1); x++) {
+  for (int64_t y = 1; y < (MAPY - 1); y++) {
+    for (int64_t x = 1; x < (MAPX - 1); x++) {
       if (map[x][y].type == T_STONE) {
-        if ((map[x-1][y].type == T_GRASS) || (map[x+1][y].type == T_GRASS) || (map[x][y+1].type == T_GRASS) || (map[x][y-1].type == T_GRASS))
+        if ((map[x - 1][y].type == T_GRASS) || (map[x + 1][y].type == T_GRASS) || (map[x][y + 1].type == T_GRASS) || (map[x][y - 1].type == T_GRASS))
           map[x][y].type = T_STONE;
         else
           map[x][y].type = T_WALL;
@@ -114,34 +137,31 @@ void saveSave(struct Config data) {
 void dotyle(int64_t x, int64_t y, struct Tyle *dest) {
 
   if (y == 0 || y == (MAPY - 1)) {
-    dest->elivation = map[x][y].elivation;
     dest->temperature = map[x][y].temperature;
     dest->type = map[x][y].type;
     return;
   }
   if (x == 0 || x == (MAPX - 1)) {
-    dest->elivation = map[x][y].elivation;
     dest->temperature = map[x][y].temperature;
     dest->type = map[x][y].type;
     return;
   }
 
   dest->type = map[x][y].type;
-  dest->elivation = map[x][y].elivation;
   dest->temperature = ((map[x][y + 1].temperature + map[x][y - 1].temperature + map[x + 1][y].temperature + map[x - 1][y].temperature) / 4 * .02) + (map[x][y].temperature * .98f);
   switch (map[x][y].type) {
-  case T_STONE:
-    if (map[x][y].data.mosstimer)
-      dest->data.mosstimer--;
-    if (map[x][y].data.mosstimer < 0)
-      dest->type = T_GRASS;
-    break;
-  case T_GRASS:
-    if (map[x][y].temperature > gLavatemp) {
-      dest->type = T_STONE;
-      dest->data.mosstimer = gGrasregrow;
-    }
-    break;
+    case T_STONE:
+      if (map[x][y].data.mosstimer)
+        dest->data.mosstimer--;
+      if (map[x][y].data.mosstimer < 0)
+        dest->type = T_GRASS;
+      break;
+    case T_GRASS:
+      if (map[x][y].temperature > gLavatemp) {
+        dest->type = T_STONE;
+        dest->data.mosstimer = gGrasregrow;
+      }
+      break;
   }
 }
 
@@ -163,23 +183,27 @@ void renderchar(int64_t x, int64_t y, int64_t xpos, int64_t ypos) { //render a x
   int64_t attr = 0;
   int64_t tylech = 0;
   switch (map[x][y].type) {
-  case T_GRASS:
-    attr |= F_COLOR_PAIR(C_GRASS);
-    tylech |= gGrass[((y ^ (gGrasscount / 2)) ^ ((x + 1) ^ ((gGrasscount)))) % gGrasscount];
-    break;
-  case T_STONE:
-    if (map[x][y].temperature > gLavatemp) {
-      attr |= F_COLOR_PAIR(C_MAGMA);
-      tylech |= CH_WATER;
-    } else {
-      attr |= F_COLOR_PAIR(C_STONE);
-      tylech |= CH_STONE;
-    }
+    case T_GRASS:
+    //  attr |= F_COLOR_PAIR(C_GRASS);
+    //  tylech |= gGrass[((y ^ (gGrasscount / 2)) ^ ((x + 1) ^ ((gGrasscount)))) % gGrasscount];
+    //  break;
+    case T_STONE:;
+    case T_WALL:;
 
-    break;
-  case T_WALL:
-    tylech = ' ';
-    break;
+      if (x >= MAPX - 1 || y >= MAPY - 1) {
+        tylech = ' ';
+      } else {
+        bool s10 = map[x + 1][y].type == T_STONE || map[x + 1][y].type == T_WALL;
+        bool s01 = map[x][y + 1].type == T_STONE || map[x][y + 1].type == T_WALL;
+        bool s11 = map[x + 1][y + 1].type == T_STONE || map[x + 1][y + 1].type == T_WALL;
+        bool s00 = map[x][y].type == T_STONE || map[x][y].type == T_WALL;
+        tylech = " ,._'|\\\\`/|/\"/\\#"[(s01 << 0) + (s11 << 1) + (s00 << 2) + (s10 << 3)];
+      }
+
+      break;
+    //case T_WALL:
+    //  tylech = ' ';
+    //  break;
   }
   if ((y == cursorY) && (x == cursorX) && ((frame % 60) > 30)) {
     tylech = 'X';

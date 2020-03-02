@@ -1,5 +1,4 @@
 [grassRegrow :600] regrow fast 
-[stoneMelt : ] .25
-[seaLeval : ] .5 phaser is broken
+[stoneMelt : 2000] .25
 [MSPT : 15] fast ticks (tps = 60 )
-[placelavatemp : 3] 
+[placelavatemp : 5000] 

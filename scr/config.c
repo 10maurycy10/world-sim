@@ -79,7 +79,7 @@ int64_t readint(char *file, int64_t *i, int64_t size, int64_t min, int64_t max) 
         configerror("to big int64_t");
       }
       if (val < min) {
-        configerror("to big int64_t");
+        configerror("to small int64_t");
       }
       return val;
       break;

@@ -89,7 +89,11 @@ void F_load(char *font) {
 void F_init() {
   F_initpair(0, 255, 255, 255, 0, 0, 0);
   SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+  #ifdef FULL_SCREEN
+  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
+  #else
   window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN);
+  #endif
   SDL_UpdateWindowSurface(window);
   gScreenSurface = SDL_GetWindowSurface(window);
 }
@@ -127,10 +131,10 @@ bool F_gete(SDL_Event *e) { // polles for a event : true if got a event, false
         case SDL_WINDOWEVENT_SIZE_CHANGED:
           //gScreenSurface -> w = e -> window.data1;
           //gScreenSurface -> h = e -> window.data2;
-          SDL_FreeSurface(gScreenBuffer);
-          gScreenBuffer = SDL_CreateRGBSurfaceWithFormat(0,gScreenSurface->w,gScreenSurface->h,8,SDL_PIXELFORMAT_RGB332);
-          F_getmaxxy(gWindowx,gWindowy);
-          printf("resize\n");
+          //SDL_FreeSurface(gScreenBuffer);
+          //gScreenBuffer = SDL_CreateRGBSurfaceWithFormat(0,gScreenSurface->w,gScreenSurface->h,8,SDL_PIXELFORMAT_RGB332);
+          //F_getmaxxy(gWindowx,gWindowy);
+          //printf("resize\n");
           break;
       }
     }
