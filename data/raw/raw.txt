@@ -1,4 +1,11 @@
-[grassRegrow :600] regrow fast 
-[stoneMelt : 2000] .25
-[MSPT : 15] fast ticks (tps = 60 )
-[placelavatemp : 5000] 
+Thw raw file for WORLDSIM, public domain. 
+[MAT:WALL:
+  [DRAW:" **"]
+]
+[MAT:GRASS:
+  [DRAW:"***"]
+  [ORGANIC]
+]
+[MAT:STONE:
+  [DRAW:"+~ "]
+]

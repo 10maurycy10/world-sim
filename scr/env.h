@@ -1,6 +1,5 @@
 double gSealeval;
 double gLavatemp;
-double gLavaPlaceTemp;
 int64_t gGrasregrow;
 int64_t gMSPT;
 int64_t gRavaPlaceTemp;
@@ -24,17 +23,15 @@ struct Raw {
   int64_t grassRegrow; //time
   double seaLeval;     //normlized elivatin
   int64_t MSPT;        //milli secons per tick
-  int64_t lava;
 };
 
 
 
 void loadObj(struct Raw *data) {
-  gSealeval = data->seaLeval;
+  gSealeval = 0;
   gLavatemp = 2000;
-  gGrasregrow = data->grassRegrow;
-  gLavaPlaceTemp = data->lava;
-  gMSPT = data->MSPT;
+  gGrasregrow = 60;
+  gMSPT = 15;
 }
 
 int64_t frame = 0;

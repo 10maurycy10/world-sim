@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-
 enum RS { RS_CLOSE,
           RS_GAME,
           RS_MAIN };
@@ -92,21 +91,23 @@ bool gameIo(int64_t key, struct Config data) {
       break;
 
     case K_LAND:
-      map[cursorX][cursorY].type = T_GRASS;
+      map[cursorX][cursorY].Lmat = MAT_GRASS;
       map[cursorX][cursorY].temperature = 0.0f;
       break;
     case K_WATER:
-      map[cursorX][cursorY].type = T_STONE;
+      map[cursorX][cursorY].Lmat = MAT_STONE;
       map[cursorX][cursorY].temperature = 0.0f;
+      map[cursorX][cursorY].LairData.mosstimer = -1;
       break;
     case K_LAVA:
-      map[cursorX][cursorY].temperature = gLavaPlaceTemp;
+      map[cursorX][cursorY].temperature = 10000;
       break;
 
     case K_debug:
-      F_move(0,20);
-      F_printw("type: %d, ",0,1,map[cursorX][cursorY].type);
-      F_printw("data: %d, ",0,1,map[cursorX][cursorY].data.mosstimer);
+      F_move(0, 20);
+      printf("type: %d, ", map[cursorX][cursorY].Lmat);
+      printf("data: %d, ", map[cursorX][cursorY].LairData.mosstimer);
+      printf("gMSPT: %d", (int)gMSPT);
       F_more();
   }
 
@@ -152,12 +153,12 @@ void gameloop() {
 
   while (running == RS_GAME) {
     if (((CLOCKS_PER_SEC / 1000) * gMSPT) <= (clock() - lastTick)) {
+      mspt = (clock() - lastTick);
       lastTick = clock();
       profile(T_tick);
       ticktyles();
       frame++;
     }
-    mspt = (clock() - lastFrame);
     lastFrame = clock();
 
     profile(T_input);
@@ -182,9 +183,9 @@ void gameloop() {
     F_ATTR(F_COLOR_PAIR(C_TEXT));
     F_move(0, 0);
     if (mspt != 0)
-      F_printw("\tfps: %d", 0, 1, (int)(1000 / (mspt)) + 1);
+      F_printw("\tps: %d", 0, 1, (int)(1000 / (mspt)) + 1);
     else
-      F_printw("\tfps: infinity",0,0);
+      F_printw("\t  ps: infinity", 0, 0);
     SDL_Delay(10);
     profile(T_present);
     F_refresh();
