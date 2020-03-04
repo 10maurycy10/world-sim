@@ -6,7 +6,7 @@
 #define SDL_MAIN_HANDLED
 #include "game.c"
 int main(int argc, char *argv[]) {
-  int64_t i = 0;
+  int i = 0;
   char *cfile = "data/config.txt";
   gRFile = NULL;
   if ((i + 1) < argc) {

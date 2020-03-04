@@ -4,40 +4,46 @@
 #endif
 
 #define MATS 256
-enum MAT { MAT_WALL,
-         MAT_GRASS,
-         MAT_STONE,
-};
+int MAT_STONE,
+    MAT_WALL,
+    MAT_GRASS;
+int getMat(char*);
+
+void loadMats() {
+  MAT_STONE = getMat("STONE");
+  MAT_GRASS = getMat("GRASS");
+  MAT_WALL = getMat("WALL");
+}
 
 char matTexture[MATS][3] = {
-  {' ','*','*'},
-  {'*','*','*'}, //curanty ignored
-  {'#','~','*'}
+    {'#', '~', '*'},
+    {' ', '*', '*'},
+    {'*', '*', '*'}, //curanty ignored
 };
 int matMelt[MATS] = {
-  2000,
-  2000,
-  2000,
+    2000,
+    2000,
+    2000,
 };
 int matDecompTemp[MATS] = {
-  -1,
-  1150,
-  -1,
+    -1,
+    -1,
+    1150,
 };
 int matDecompTo[MATS] = {
-  -1,
-  MAT_STONE,
-  -1
+    -1,
+    -1,
+    -1,
 };
 int matCol[MATS][3] = {
-  {C_TEXT,C_TEXT,C_TEXT},
-  {C_GRASS,C_TEXT,C_TEXT},
-  {C_TEXT,C_MAGMA,C_TEXT},
+    {C_TEXT, C_MAGMA, C_TEXT},
+    {C_TEXT, C_TEXT, C_TEXT},
+    {C_GRASS, C_TEXT, C_TEXT},
 };
 char *gGrass = ",'.`";
 #define gGrasscount 4
 struct Tyle {
-  uint32_t temperature; // 1000 = 0c  1100 = 100c
+  int32_t temperature; // 1000 = 0c  1100 = 100c
   uint16_t Lmat;
   union LData {
     int16_t mosstimer;
@@ -66,10 +72,10 @@ void genaratemap(int seed) { //reset the map
   gMapx = 100;
 
   if (map) {
-    for (int64_t i = 0; i < MAPX; i++) {
+    for (int i = 0; i < MAPX; i++) {
       free(map[i]);
     }
-    for (int64_t i = 0; i < MAPX; i++) {
+    for (int i = 0; i < MAPX; i++) {
       free(nmap[i]);
     }
     free(nmap);
@@ -78,10 +84,10 @@ void genaratemap(int seed) { //reset the map
 
   map = malloc(MAPX * (sizeof(void *)));
   nmap = malloc(MAPX * (sizeof(void *)));
-  for (int64_t i = 0; i < MAPX; i++) {
+  for (int i = 0; i < MAPX; i++) {
     map[i] = malloc((sizeof(struct Tyle)) * MAPY);
   }
-  for (int64_t i = 0; i < MAPX; i++) {
+  for (int i = 0; i < MAPX; i++) {
     nmap[i] = malloc((sizeof(struct Tyle)) * MAPY);
   }
 
@@ -92,22 +98,9 @@ void genaratemap(int seed) { //reset the map
       ch[i][e] = rand() % 2;
     }
 
-  int distancefrom00 = 0;
-  int distancefrom01 = 0;
-  int distancefrom11 = 0;
-  int distancefrom10 = 0;
-
-  for (int64_t y = 0; y < MAPY; y++) {
-    for (int64_t x = 0; x < MAPX; x++) {
+  for (int y = 0; y < MAPY; y++) {
+    for (int x = 0; x < MAPX; x++) {
       map[x][y].temperature = 1000;
-      distancefrom00 = x % 30 + y % 30;
-      distancefrom01 = x % 30 + 30 - ((y) % 30);
-      distancefrom10 = 30 - ((x) % 30) + y % 30;
-      distancefrom11 = 30 - ((x) % 30) + 30 - ((y) % 30);
-      int effect00 = ch[x / 30][y / 30] * 40 / (distancefrom00 + 1),
-          effect01 = ch[x / 30 + 1][y / 30] * 40 / (distancefrom01 + 1),
-          effect10 = ch[x / 30][y / 30 + 1] * 40 / (distancefrom10 + 1),
-          effect11 = ch[x / 30 + 1][y / 30 + 1] * 40 / (distancefrom11 + 1);
       if (0 < ch[x / 30][y / 30])
         map[x][y].Lmat = MAT_STONE;
       else
@@ -115,8 +108,8 @@ void genaratemap(int seed) { //reset the map
     }
   }
   free(ch);
-  for (int64_t y = 1; y < (MAPY - 1); y++) {
-    for (int64_t x = 1; x < (MAPX - 1); x++) {
+  for (int y = 1; y < (MAPY - 1); y++) {
+    for (int x = 1; x < (MAPX - 1); x++) {
       if (map[x][y].Lmat == MAT_STONE) {
         map[x][y].LairData.mosstimer = -1;
         if ((map[x - 1][y].Lmat == MAT_GRASS) || (map[x + 1][y].Lmat == MAT_GRASS) || (map[x][y + 1].Lmat == MAT_GRASS) || (map[x][y - 1].Lmat == MAT_GRASS))
@@ -135,10 +128,10 @@ void loadSave(struct Config data) {
   data.savefile->read(data.savefile, s, 1, data.savefile->size(data.savefile)); //copy into mem
 
   if (map) { //free old map
-    for (int64_t i = 0; i < MAPX; i++) {
+    for (int i = 0; i < MAPX; i++) {
       free(map[i]);
     }
-    for (int64_t i = 0; i < MAPX; i++) {
+    for (int i = 0; i < MAPX; i++) {
       free(nmap[i]);
     }
     free(nmap);
@@ -152,15 +145,15 @@ void loadSave(struct Config data) {
 
   map = malloc(MAPX * (sizeof(void *)));
   nmap = malloc(MAPX * (sizeof(void *)));
-  for (int64_t i = 0; i < MAPX; i++) {
+  for (int i = 0; i < MAPX; i++) {
     map[i] = malloc((sizeof(struct Tyle)) * MAPY);
   }
-  for (int64_t i = 0; i < MAPX; i++) {
+  for (int i = 0; i < MAPX; i++) {
     nmap[i] = malloc((sizeof(struct Tyle)) * MAPY);
   }
 
-  for (int64_t y = 0; y < MAPY; y++) {
-    for (int64_t x = 0; x < MAPX; x++) {
+  for (int y = 0; y < MAPY; y++) {
+    for (int x = 0; x < MAPX; x++) {
       map[x][y] = OFFSET(s->data, x + y * MAPX);
     }
   }
@@ -185,7 +178,7 @@ void saveSave(struct Config data) {
   free(save);
 }
 
-void dotyle(int64_t x, int64_t y, struct Tyle *dest) {
+void dotyle(int x, int y, struct Tyle *dest) {
   (*dest) = map[x][y];
   if (y == 0 || y == (MAPY - 1)) {
     return;
@@ -195,21 +188,17 @@ void dotyle(int64_t x, int64_t y, struct Tyle *dest) {
   }
   dest->temperature = ((map[x][y + 1].temperature + map[x][y - 1].temperature + map[x + 1][y].temperature + map[x - 1][y].temperature) / 4 * .02) + (map[x][y].temperature * .98f);
 
-
-  switch (map[x][y].Lmat) {
-    case MAT_STONE:
-      if (map[x][y].LairData.mosstimer > -1) {
-        if (map[x][y].LairData.mosstimer > 0)
-          dest->LairData.mosstimer--;
-        if (map[x][y].LairData.mosstimer == 0)
-          dest->Lmat = MAT_GRASS;
-      }
-      break;
-    case MAT_GRASS:
-      if (map[x][y].temperature > matDecompTemp[MAT_GRASS]) {
-        dest->LairData.mosstimer = gGrasregrow;
-      }
-      break;
+  if (map[x][y].Lmat == MAT_STONE) {
+    if (map[x][y].LairData.mosstimer > -1) {
+      if (map[x][y].LairData.mosstimer > 0)
+        dest->LairData.mosstimer--;
+      if (map[x][y].LairData.mosstimer == 0)
+        dest->Lmat = MAT_GRASS;
+    }
+  } else if (map[x][y].Lmat == MAT_GRASS) {
+    if (map[x][y].temperature > matDecompTemp[MAT_GRASS]) {
+      dest->LairData.mosstimer = gGrasregrow;
+    }
   }
   if (dest->temperature > matDecompTemp[dest->Lmat] && matDecompTemp[dest->Lmat] > -1) {
     dest->Lmat = matDecompTo[dest->Lmat];
@@ -218,8 +207,8 @@ void dotyle(int64_t x, int64_t y, struct Tyle *dest) {
 
 void ticktyles() {
 
-  for (int64_t x = 0; x < MAPX; x++) {
-    for (int64_t y = 0; y < MAPY; y++) {
+  for (int x = 0; x < MAPX; x++) {
+    for (int y = 0; y < MAPY; y++) {
       dotyle(x, y, &(nmap[x][y]));
     }
   }
@@ -230,15 +219,13 @@ void ticktyles() {
   map = tmp;
 }
 
-void renderchar(int64_t x, int64_t y, int64_t xpos, int64_t ypos) { //render a x:x(map) y:y(map) pos: pos on screan
+void renderchar(int x, int y, int xpos, int ypos) { //render a x:x(map) y:y(map) pos: pos on screan
   int state = map[x][y].temperature > matMelt[map[x][y].Lmat];
-  int64_t attr = F_COLOR_PAIR(matCol[map[x][y].Lmat][state]);
-  int64_t tylech = 0;
+  int attr = F_COLOR_PAIR(matCol[map[x][y].Lmat][state]);
+  int tylech = 0;
   tylech = matTexture[map[x][y].Lmat][state];
-  switch (map[x][y].Lmat) {
-    case MAT_GRASS:
-      tylech = gGrass[((y ^ (gGrasscount / 2)) ^ ((x + 1) ^ ((gGrasscount)))) % gGrasscount];
-      break;
+  if (map[x][y].Lmat == MAT_GRASS) {
+    tylech = gGrass[((y ^ (gGrasscount / 2)) ^ ((x + 1) ^ ((gGrasscount)))) % gGrasscount];
   }
   if ((y == cursorY) && (x == cursorX) && ((frame % 60) > 30)) {
     tylech = 'X';

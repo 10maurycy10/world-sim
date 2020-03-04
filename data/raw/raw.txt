@@ -1,11 +1,18 @@
-Thw raw file for WORLDSIM, public domain. 
-[MAT:WALL:
-  [DRAW:" **"]
+The raw file for WORLD-SIM.
+This file contains the data that the game uses to properly render and simulate objects.
+Colons delimitate sections of a tag.
+[MAT:"STONE":
+  [DRAW: "#~ "] <- This is a example of a tag an section of text that represents a property or behavior.
+  [COLOR:TEXT:RED:ERROR]
+  [MELT: 7000]
 ]
-[MAT:GRASS:
-  [DRAW:"***"]
+[MAT:"WALL": <- this is a material deceleration it is a super tag (a tag that contains tags in a part of it).
+  [DRAW: "+* "]
+  [COLOR:TEXT:YELLOW:ERROR]
+  [MELT: 7000]
+]
+[MAT:"GRASS":
+  [DRAW: "N/A"] This value is currently ignored due to no support for varied tyle-sets in raws. (for now)
+  [COLOR:GREEN:ERROR:ERROR]
   [ORGANIC]
-]
-[MAT:STONE:
-  [DRAW:"+~ "]
 ]

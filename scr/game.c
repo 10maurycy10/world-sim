@@ -26,7 +26,7 @@ enum colors {
 void gend();
 #include "env.h"
 #include "font.c"
-int64_t cursorX = 1, cursorY = 1;
+int cursorX = 1, cursorY = 1;
 #include "config.c"
 #include "map.c"
 #include "raw.c"
@@ -52,7 +52,7 @@ enum controls {
 
 int running;
 
-bool gameIo(int64_t key, struct Config data) {
+bool gameIo(int key, struct Config data) {
 
   // if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
   //  return 1;
@@ -144,10 +144,10 @@ void gameloop() {
   F_getmaxxy(gWindowx, gWindowy);
   // printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
 
-  int64_t lastFrame = clock();
-  int64_t lastTick = clock();
-  int64_t mspt = 0;
-  int64_t key = 0;
+  int lastFrame = clock();
+  int lastTick = clock();
+  int mspt = 0;
+  int key = 0;
 
   profile(T_spin);
 
@@ -159,7 +159,7 @@ void gameloop() {
       ticktyles();
       frame++;
     }
-    lastFrame = clock();
+    //lastFrame = clock();
 
     profile(T_input);
     key = 0;
@@ -183,9 +183,9 @@ void gameloop() {
     F_ATTR(F_COLOR_PAIR(C_TEXT));
     F_move(0, 0);
     if (mspt != 0)
-      F_printw("\tps: %d", 0, 1, (int)(1000 / (mspt)) + 1);
+      F_printw("\ttps: %d", 0, 1, (int)(1000 / (mspt)) + 1);
     else
-      F_printw("\t  ps: infinity", 0, 0);
+      F_printw("\ttps: infinity", 0, 0);
     SDL_Delay(10);
     profile(T_present);
     F_refresh();

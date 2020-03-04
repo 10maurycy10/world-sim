@@ -11,7 +11,7 @@ void configerror(char *test) {
   _Exit(1);
 }
 
-void skipspace(char *file, int64_t *ip, int64_t size) { //you know what (who?)
+void skipspace(char *file, int *ip, int size) { //you know what (who?)
   while (*ip < size) {
     if (!(file[*ip] == ' ' || file[*ip] == '\t' || file[*ip] == '\n')) {
       break;
@@ -20,7 +20,7 @@ void skipspace(char *file, int64_t *ip, int64_t size) { //you know what (who?)
   }
 }
 
-void skipcoments(char *file, int64_t *ip, int64_t size) {
+void skipcoments(char *file, int *ip, int size) {
   while (*ip < size) { //read untill [ or ]
     if (file[*ip] == '[' || file[*ip] == '"' || file[*ip] == ']' || file[*ip] == ':') {
       break;
@@ -29,19 +29,19 @@ void skipcoments(char *file, int64_t *ip, int64_t size) {
   }
 }
 
-double readfloat(char *file, int64_t *i, int64_t size, double min, volatile double max) {
+double readfloat(char *file, int *i, int size, double min, volatile double max) {
   skipspace(file, i, size);
   skipcoments(file, i, size);
   return (min + max - max);
 }
 
-int64_t readint(char *file, int64_t *i, int64_t size, int64_t min, int64_t max) {
+int readint(char *file, int *i, int size, int min, int max) {
 
-  int64_t val = 0;
+  int val = 0;
 
   skipspace(file, i, size);
   while ((*i) < (size)) {
-    //printf("config.read int64_t scaned %d : %c\n",*i , file[*i]);
+    //printf("config.read int scaned %d : %c\n",*i , file[*i]);
     switch (file[*i]) { //code rep...
     case '0':
       val = (0 + val * 10);
@@ -76,10 +76,10 @@ int64_t readint(char *file, int64_t *i, int64_t size, int64_t min, int64_t max) 
 
     default:
       if (val > max) {
-        configerror("to big int64_t");
+        configerror("to big int");
       }
       if (val < min) {
-        configerror("to small int64_t");
+        configerror("to small int");
       }
       return val;
       break;
@@ -87,18 +87,18 @@ int64_t readint(char *file, int64_t *i, int64_t size, int64_t min, int64_t max) 
     (*i)++;
   }
   if (val > max) {
-    configerror("to big int64_t");
+    configerror("to big int");
   }
   if (val < min) {
-    configerror("to big int64_t");
+    configerror("to big int");
   }
   return val;
 }
 
-char *getstrtag(char *file, int64_t *ip, int64_t size) { //gets a string and malock() it
-  int64_t strsize = 0;
+char *getstrtag(char *file, int *ip, int size) { //gets a string and malock() it
+  int strsize = 0;
   char *string;
-  int64_t i = 0;
+  int i = 0;
 
   if (*ip > size) {
     configerror("bad str");
@@ -130,8 +130,8 @@ char *getstrtag(char *file, int64_t *ip, int64_t size) { //gets a string and mal
   return (string);        //return matched string
 }
 
-int8_t stringmatch(char *file, int64_t *ip, char *str, int64_t size) {
-  int64_t i = 0;
+int8_t stringmatch(char *file, int *ip, char *str, int size) {
+  int i = 0;
   //printf("config.strmatch: maching : \"%s\" , i: %d\n" , str , *ip);
   while (str[i]) { //for all of instr
     if (*ip > size) {
@@ -147,15 +147,15 @@ int8_t stringmatch(char *file, int64_t *ip, char *str, int64_t size) {
   return 1;
 }
 
-void matchcol(char *file, int64_t *ip, int64_t size) {
+void matchcol(char *file, int *ip, int size) {
   if (!stringmatch(file, ip, ":", size)) {
     configerror("no col");
   }
 }
 
 void readconfig(SDL_RWops *file, struct Config *configstruct) {
-  int64_t i = 0;
-  int64_t size = -1;
+  int i = 0;
+  int size = -1;
   char *strp = NULL;
   char *buffer = NULL;
   buffer = malloc(1 + (size = (file->size(file)))); //alloc buffer and save size in size

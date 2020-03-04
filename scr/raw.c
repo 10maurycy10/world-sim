@@ -1,10 +1,36 @@
-int getMat(char* mat) {
-  if (!strcmp("STONE",mat)) {
-    return MAT_STONE;
+char* matNames[256];
+
+int getMat(char* mat) { //DO NOT RUN OUSIDE OF READ RAW OR LOAD MATS
+  for (int i = 0;i < 256;i++) {
+    if (!strcmp(matNames[i],mat)) {
+      return i;
+    }
   }
+  configerror("undfind mat");
+  return 0;
 }
 
-void readmat(char *buffer, int64_t *i, int64_t sizeb, int id) { //read a mat to mem
+int ScanColor(char* buffer,int* i) {
+  skipspace(buffer,i,256);
+  if (stringmatch(buffer,i,"ERROR",strlen(buffer))) {
+    return(C_HIGH);
+  }
+  if (stringmatch(buffer,i,"TEXT",strlen(buffer))) {
+    return(C_TEXT);
+  }
+  if (stringmatch(buffer,i,"RED",strlen(buffer))) {
+    return(C_MAGMA);
+  }
+  if (stringmatch(buffer,i,"YELLOW",strlen(buffer))) {
+    return(C_HIGH);
+  }
+  if (stringmatch(buffer,i,"GREEN",strlen(buffer))) {
+    return(C_GRASS);
+  }
+  return(C_DIM);
+}
+
+void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
   skipcoments(buffer, i, sizeb);
   while (stringmatch(buffer, i, "", sizeb)) {
     skipcoments(buffer, i, sizeb);
@@ -14,9 +40,9 @@ void readmat(char *buffer, int64_t *i, int64_t sizeb, int id) { //read a mat to 
     }
     if (stringmatch(buffer, i, "[DRAW", sizeb)) {
 
-      printf ("got draw;");
       skipcoments(buffer, i, sizeb);
       matchcol(buffer, i, sizeb);
+      skipcoments(buffer, i, sizeb);
 
       if (!stringmatch(buffer, i, "\"", sizeb))
         configerror("DRAW is mising a string!!!");
@@ -45,8 +71,25 @@ void readmat(char *buffer, int64_t *i, int64_t sizeb, int id) { //read a mat to 
       }
       matDecompTo[id] = getMat("STONE");
       matDecompTemp[id] = 1180;
+    } else if (stringmatch(buffer, i, "[MELT", sizeb)) {
+      skipcoments(buffer, i, sizeb);
+      matchcol(buffer, i, sizeb);
+      //skipcoments(buffer, i, sizeb);
+      matMelt[id] = readint(buffer,i,sizeb,0,99999);
+      skipcoments(buffer, i, sizeb);
+      if (!stringmatch(buffer, i, "]", sizeb)) {
+        configerror("bad MELT: tag unclosed");
+      }
+    } else if (stringmatch(buffer, i, "[COLOR", sizeb)) {
+      for (int e = 0;e < 3;e++) {
+        skipcoments(buffer,i,sizeb);
+        matchcol(buffer,i,sizeb);
+        matCol[id][e] = ScanColor(buffer,i);
+      }
+      if (!stringmatch(buffer, i, "]", sizeb)) {
+        configerror("bad COLOR: tag unclosed");
+      }
     } else {
-      printf("BAD TAG: %s", &buffer[*i]);
       configerror("unrecognized tag in mat");
     }
     skipcoments(buffer, i, sizeb);
@@ -54,8 +97,8 @@ void readmat(char *buffer, int64_t *i, int64_t sizeb, int id) { //read a mat to 
 }
 
 void readraw(SDL_RWops *file, struct Raw *raw) {
-  int64_t i = 0;
-  int64_t sizeb = 0;
+  int i = 0;
+  int sizeb = 0;
   int id = 0;
   char *buffer = NULL;
   sizeb = (file->size(file));
@@ -71,10 +114,8 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
     skipcoments(buffer, &i, sizeb);
     if (stringmatch(buffer, &i, "[MAT", sizeb)) {
 
-      printf("got mat;");
       matchcol(buffer, &i, sizeb);
-      skipcoments(buffer, &i, sizeb);
-      //printf("COMMENTS: %s", &buffer[i]);
+      matNames[id] = getstrtag(buffer,&i,sizeb);
       matchcol(buffer, &i, sizeb);
       readmat(buffer, &i, sizeb, id);
       skipcoments(buffer, &i, sizeb);
@@ -83,11 +124,14 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
         configerror("bad MAT: tag unclosed");
       }
       id++;
+
     } else {
-        printf("%s", &buffer[i]);
       configerror("unrecognized tag in raw");
     }
     skipcoments(buffer, &i, sizeb);
   }
   free(buffer);
+  loadMats();
+  for (int i = 0;i < 256;i++)
+    free(matNames[id]);
 }
