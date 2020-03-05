@@ -6,8 +6,8 @@ Colons delimitate sections of a tag.
   [COLOR:TEXT:RED:ERROR]
   [MELT: 7000]
 ]
-[MAT:"WALL": <- this is a material deceleration it is a super tag (a tag that contains tags in a part of it).
-  [DRAW: "+* "]
+[MAT:"WALL": <- this is a material deceleration, it is a super tag (a tag that contains tags in a part of it).
+  [DRAW: " * "]
   [COLOR:TEXT:YELLOW:ERROR]
   [MELT: 7000]
 ]
