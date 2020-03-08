@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <unistd.h>
-
 #undef UNICODE
 #define UNICODE
 #define SDL_MAIN_HANDLED

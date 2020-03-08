@@ -14,8 +14,12 @@ const char *gVerson = "0.12"; //game verson
 #define MAPY gMapy //map size
 #define MAPX gMapx
 //#define TEST
-#define SCRY (gWindowy - 2) //the size of the map vew port
-#define SCRX (gWindowx - 2)
+#define SCRY ((gWindowy) - 2) //the size of the map vew port
+#define SCRX ((gWindowx - 50))
+#define HELPY (gWindowy)
+#define HELPX ((48))
+#define HELPXSTART (SCRX + 1)
+
 
 struct Raw {
   int stoneMelt;    //normlized temp
@@ -29,7 +33,7 @@ struct Raw {
 void loadObj(struct Raw *data) {
   gSealeval = 0;
   gGrasregrow = 60;
-  gMSPT = 15;
+  gMSPT = 25;
 }
 
 int frame = 0;

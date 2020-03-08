@@ -7,7 +7,7 @@
 int MAT_STONE,
     MAT_WALL,
     MAT_GRASS;
-int getMat(char*);
+int getMat(char *);
 
 void loadMats() {
   MAT_STONE = getMat("STONE");
@@ -101,9 +101,10 @@ void genaratemap(int seed) { //reset the map
   for (int y = 0; y < MAPY; y++) {
     for (int x = 0; x < MAPX; x++) {
       map[x][y].temperature = 1000;
-      if (0 < ch[x / 30][y / 30])
+      if (0 < ch[x / 30][y / 30]) {
         map[x][y].Lmat = MAT_STONE;
-      else
+        map[x][y].LairData.mosstimer = -1;
+      } else
         map[x][y].Lmat = MAT_GRASS;
     }
   }
@@ -180,13 +181,11 @@ void saveSave(struct Config data) {
 
 void dotyle(int x, int y, struct Tyle *dest) {
   (*dest) = map[x][y];
-  if (y == 0 || y == (MAPY - 1)) {
-    return;
+  if (y != 0 && y != (MAPY - 1)) {
+    if (x != 0 && x != (MAPX - 1)) {
+      dest->temperature = ((map[x][y + 1].temperature + map[x][y - 1].temperature + map[x + 1][y].temperature + map[x - 1][y].temperature) / 4 * .02) + (map[x][y].temperature * .98f);
+    }
   }
-  if (x == 0 || x == (MAPX - 1)) {
-    return;
-  }
-  dest->temperature = ((map[x][y + 1].temperature + map[x][y - 1].temperature + map[x + 1][y].temperature + map[x - 1][y].temperature) / 4 * .02) + (map[x][y].temperature * .98f);
 
   if (map[x][y].Lmat == MAT_STONE) {
     if (map[x][y].LairData.mosstimer > -1) {
@@ -227,7 +226,7 @@ void renderchar(int x, int y, int xpos, int ypos) { //render a x:x(map) y:y(map)
   if (map[x][y].Lmat == MAT_GRASS) {
     tylech = gGrass[((y ^ (gGrasscount / 2)) ^ ((x + 1) ^ ((gGrasscount)))) % gGrasscount];
   }
-  if ((y == cursorY) && (x == cursorX) && ((frame % 60) > 30)) {
+  if ((y == cursorY) && (x == cursorX) && ((frame % 60) > 30) && !(menueState == MEN_MAIN)) {
     tylech = 'X';
     attr = (F_COLOR_PAIR(C_HIGH));
   } else {
@@ -238,7 +237,8 @@ void renderchar(int x, int y, int xpos, int ypos) { //render a x:x(map) y:y(map)
 
 void maprender() {
   for (int32_t x = 0; x < SCRX; x++)
-    for (int32_t y = 0; y < SCRY; y++)
+    for (int32_t y = 0; y < SCRY; y++) {
+      F_ATTR(F_COLOR_PAIR(C_TEXT));
       if (((x + cursorX - SCRX / 2) < MAPX) && ((x + cursorX - SCRX / 2) > -1))
         if (((y + cursorY - SCRY / 2) < MAPY) && ((y + cursorY - SCRY / 2) > -1))
           renderchar(x + cursorX - SCRX / 2, y + cursorY - SCRY / 2, x, y);
@@ -246,4 +246,5 @@ void maprender() {
           F_MVputch(x + 1, y + 1, ' ');
       else
         F_MVputch(x + 1, y + 1, ' ');
+    }
 }

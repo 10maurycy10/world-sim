@@ -14,6 +14,7 @@ enum colors {
   C_TEXT,
   C_OK,
   C_YELOW,
+  C_ERROR,
   C_FAIL,
   C_HIGH,
   C_GRASS,
@@ -22,6 +23,11 @@ enum colors {
   C_WATER,
   C_DIM
 };
+
+enum MEN { MEN_MAIN,
+           MEN_INSPECT,
+           MEN_PLACE };
+int menueState = MEN_MAIN;
 
 void gend();
 #include "env.h"
@@ -37,6 +43,7 @@ enum controls {
   K_UP = SDLK_UP,
   K_DOWN = SDLK_DOWN,
   K_RIGHT = SDLK_RIGHT,
+  K_INSPECT = SDLK_k,
 
   K_EXIT = SDLK_q,
   K_RESTART = SDLK_r,
@@ -57,38 +64,64 @@ bool gameIo(int key, struct Config data) {
   // if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
   //  return 1;
   //}
+  
+  switch (menueState) {
+    case MEN_MAIN:
+      switch (key) {
+        case K_EXIT:
+          running = RS_MAIN;
+          break;
+        case K_LEFT:
+          if (cursorX > 4)
+            cursorX -= 5;
+          break;
+        case K_RIGHT:
+          if (cursorX < MAPX - 5)
+            cursorX += 5;
+          break;
+        case K_UP:
+          if (cursorY > 4)
+            cursorY -= 5;
+          break;
+        case K_DOWN:
+          if (cursorY < MAPY - 5)
+            cursorY += 5;
+          break;
+        case K_INSPECT:
+          menueState = MEN_INSPECT;
+          break;
+      }
+      break;
+    case MEN_INSPECT:
+      switch (key) {
+        case K_EXIT:
+          menueState = MEN_MAIN;
+          break;
+        case K_LEFT:
+          if (cursorX > 0)
+            cursorX -= 1;
+          break;
+        case K_RIGHT:
+          if (cursorX < MAPX - 1)
+            cursorX += 1;
+          break;
+        case K_UP:
+          if (cursorY > 0)
+            cursorY -= 1;
+          break;
+        case K_DOWN:
+          if (cursorY < MAPY - 1)
+            cursorY += 1;
+          break;
+      }
+      break;
+      default:
+        menueState = MEN_MAIN;
+  }
 
   switch (key) {
     case 0:
       return 1;
-
-    case K_EXIT:
-      running = RS_MAIN;
-      break;
-
-    case K_LEFT:
-      if (cursorX > 0)
-        cursorX -= 1;
-      break;
-    case K_RIGHT:
-      if (cursorX < MAPX - 1)
-        cursorX += 1;
-      break;
-    case K_UP:
-      if (cursorY > 0)
-        cursorY -= 1;
-      break;
-    case K_DOWN:
-      if (cursorY < MAPY - 1)
-        cursorY += 1;
-      break;
-
-    case K_load:
-      loadSave(data);
-      break;
-    case K_save:
-      saveSave(data);
-      break;
 
     case K_LAND:
       map[cursorX][cursorY].Lmat = MAT_GRASS;
@@ -113,6 +146,7 @@ bool gameIo(int key, struct Config data) {
 
   return 1;
 }
+
 struct Config dataconfig;
 void gameloop() {
   pInit();
@@ -148,7 +182,6 @@ void gameloop() {
   int lastTick = clock();
   int mspt = 0;
   int key = 0;
-
   profile(T_spin);
 
   while (running == RS_GAME) {
@@ -158,6 +191,35 @@ void gameloop() {
       profile(T_tick);
       ticktyles();
       frame++;
+      profile(T_draw);
+      F_clear();
+      F_ATTR(C_DIM);
+      F_box(0, 0, SCRX, SCRY + 1, true);
+      F_box(HELPXSTART, 0, HELPX + HELPXSTART, HELPY, true);
+      F_ATTR(F_COLOR_PAIR(C_TEXT));
+      F_move(HELPXSTART + 2, 2);
+      switch (menueState) {
+        case MEN_MAIN:
+          F_printw("Esc : Debug\n", HELPXSTART + 2, 0);
+          F_printw("K : Inspect\n", HELPXSTART + 2, 0);
+          break;
+        case MEN_INSPECT:
+          if (map[cursorX][cursorY].Lmat == MAT_STONE)
+            F_printw(" STONE\n", 0, HELPXSTART + 2);
+          else if (map[cursorX][cursorY].Lmat == MAT_GRASS)
+            F_printw(" GRASS\n", 0, HELPXSTART + 2);
+      }
+      F_move(0, 0);
+      if (mspt != 0)
+        F_printw("\ttps: %d", 0, 1, (int)(1000 / (mspt)) + 1);
+      else
+        F_printw("\ttps: infinity", 0, 0);
+      maprender();
+      gameIo(key, dataconfig);
+      SDL_Delay(10);
+      profile(T_present);
+      F_refresh();
+      profile(T_spin);
     }
     //lastFrame = clock();
 
@@ -175,21 +237,6 @@ void gameloop() {
     // F_MVputch(0,0,'a');
     // F_MVputch(1,1,'b');
     //F_clear();
-    gameIo(key, dataconfig);
-    profile(T_draw);
-    maprender();
-    F_ATTR(C_DIM);
-    F_box(0, 0, SCRX + 1, SCRY + 1, true);
-    F_ATTR(F_COLOR_PAIR(C_TEXT));
-    F_move(0, 0);
-    if (mspt != 0)
-      F_printw("\ttps: %d", 0, 1, (int)(1000 / (mspt)) + 1);
-    else
-      F_printw("\ttps: infinity", 0, 0);
-    SDL_Delay(10);
-    profile(T_present);
-    F_refresh();
-    profile(T_spin);
   }
 }
 
@@ -294,11 +341,12 @@ void game(SDL_RWops *configfile) {
   // printf("F_initpair.\n");
   F_initpair(C_TEXT, 255, 255, 255, 0, 0, 0);
   F_initpair(C_DIM, 0xA0, 0xA0, 0xA0, 0, 0, 0);
+  F_initpair(C_ERROR, 0, 0, 127, 255, 255, 0);
 
   F_initpair(C_OK, 0, 0, 255, 0, 0, 0);
   F_initpair(C_FAIL, 255, 0, 0, 0, 0, 0);
-  F_initpair(C_HIGH, 0xFF, 0x00, 0xFF, 0, 0, 0);
-  F_initpair(C_YELOW, 0xff, 0, 0xff, 255, 255, 255);
+  F_initpair(C_HIGH, 0xFF, 0x0, 0xFF, 0, 0, 0);
+  F_initpair(C_YELOW, 0xff, 0x0, 0xff, 0, 0, 0);
 
   F_initpair(C_WATER, 0, 255, 0, 0, 0, 0);
   F_initpair(C_MAGMA, 255, 0, 0, 0, 0, 0);
@@ -308,6 +356,7 @@ void game(SDL_RWops *configfile) {
   F_load(dataconfig.font);
 
   running = RS_MAIN;
+  menueState = MEN_MAIN;
 
   while (1) {
     switch (running) {

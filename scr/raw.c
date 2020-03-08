@@ -13,7 +13,7 @@ int getMat(char* mat) { //DO NOT RUN OUSIDE OF READ RAW OR LOAD MATS
 int ScanColor(char* buffer,int* i) {
   skipspace(buffer,i,256);
   if (stringmatch(buffer,i,"ERROR",strlen(buffer))) {
-    return(C_HIGH);
+    return(C_ERROR);
   }
   if (stringmatch(buffer,i,"TEXT",strlen(buffer))) {
     return(C_TEXT);
@@ -27,7 +27,7 @@ int ScanColor(char* buffer,int* i) {
   if (stringmatch(buffer,i,"GREEN",strlen(buffer))) {
     return(C_GRASS);
   }
-  return(C_DIM);
+  return(C_ERROR);
 }
 
 void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
