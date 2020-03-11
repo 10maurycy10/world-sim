@@ -4,10 +4,10 @@ Colons delimitate sections of a tag.
 [MAT:"STONE":
   [DRAW: "#~ "] <- This is a example of a tag an section of text that represents a property or behavior.
   [COLOR:TEXT:RED:ERROR]
-  [MELT: 7000]
+  [MELT: 1000]
 ]
-[MAT:"WALL": <- this is a material deceleration, it is a super tag (a tag that contains tags in a part of it).
-  [DRAW: " * "]
+[MAT:"UNDISCOVERED": <- this is a material deceleration, it is a super tag (a tag that contains tags in a part of it).
+  [DRAW: "   "]
   [COLOR:TEXT:YELLOW:ERROR]
   [MELT: 7000]
 ]

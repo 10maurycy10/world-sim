@@ -5,14 +5,14 @@
 
 #define MATS 256
 int MAT_STONE,
-    MAT_WALL,
-    MAT_GRASS;
+    MAT_GRASS,
+    MAT_UNDISCOVERED;
 int getMat(char *);
 
 void loadMats() {
   MAT_STONE = getMat("STONE");
   MAT_GRASS = getMat("GRASS");
-  MAT_WALL = getMat("WALL");
+  MAT_UNDISCOVERED = getMat("UNDISCOVERED");
 }
 
 char matTexture[MATS][3] = {
@@ -116,7 +116,7 @@ void genaratemap(int seed) { //reset the map
         if ((map[x - 1][y].Lmat == MAT_GRASS) || (map[x + 1][y].Lmat == MAT_GRASS) || (map[x][y + 1].Lmat == MAT_GRASS) || (map[x][y - 1].Lmat == MAT_GRASS))
           map[x][y].Lmat = MAT_STONE;
         else
-          map[x][y].Lmat = MAT_WALL;
+          map[x][y].Lmat = MAT_UNDISCOVERED;
       }
     }
   }

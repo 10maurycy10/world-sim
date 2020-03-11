@@ -12,7 +12,7 @@ int F_cursory = 1;
 
 SDL_Surface *gFont;
 SDL_Surface *gScreenSurface;
-SDL_Surface *gScreenBuffer;
+SDL_Window* gWindow;
 
 #define h_line 0xc4
 #define v_line 0xb3
@@ -69,7 +69,7 @@ void F_load(char *font) {
   SDL_Surface *s = loadSurface(font);
 
   s = SDL_ConvertSurface(s, gScreenSurface -> format, 0);
-  SDL_SetSurfaceBlendMode(gScreenBuffer,SDL_BLENDMODE_MOD);
+  SDL_SetSurfaceBlendMode(gScreenSurface,SDL_BLENDMODE_MOD);
 
   Uint32 colorKey = SDL_MapRGB(gScreenSurface->format, 0xff, 0, 0);
   F_catch(SDL_SetColorKey(s, SDL_TRUE, colorKey));
@@ -79,9 +79,9 @@ void F_load(char *font) {
   F_x_size = charW;
   F_y_size = charH;
 
-  gScreenBuffer = SDL_CreateRGBSurfaceWithFormat(0,gScreenSurface->w,gScreenSurface->h,8,SDL_PIXELFORMAT_RGB332);
+  //gScreenBuffer = SDL_CreateRGBSurfaceWithFormat(0,gScreenSurface->w,gScreenSurface->h,8,SDL_PIXELFORMAT_RGB332);
 
-  gScreenBuffer = gScreenSurface;
+  //gScreenBuffer = gScreenSurface;
 
   gFont = s;
 }
@@ -92,9 +92,10 @@ void F_init() {
   #ifdef FULL_SCREEN
   window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN_DESKTOP);
   #else
-  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN);
+  window = SDL_CreateWindow("[world simulator]", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1000, 1000, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
   #endif
   SDL_UpdateWindowSurface(window);
+  gWindow = window;
   gScreenSurface = SDL_GetWindowSurface(window);
 }
 
@@ -103,8 +104,9 @@ void F_end() {
 }
 
 void F_refresh() {
-  SDL_BlitSurface(gScreenBuffer,NULL,gScreenSurface,NULL);
+  //SDL_BlitSurface(gScreenSurface,NULL,gScreenSurface,NULL);
   SDL_UpdateWindowSurface(window);
+  printf(SDL_GetError());
 }
 
 void F_move(int x, int y) {
@@ -113,7 +115,7 @@ void F_move(int x, int y) {
 }
 
 void F_clear() {
-  SDL_FillRect(gScreenBuffer,NULL,SDL_MapRGB(gScreenBuffer -> format,0,0,0));
+  SDL_FillRect(gScreenSurface,NULL,SDL_MapRGB(gScreenSurface -> format,0,0,0));
   F_move(0, 0);
 }
 
@@ -129,12 +131,9 @@ bool F_gete(SDL_Event *e) { // polles for a event : true if got a event, false
     } else if (e->type == SDL_WINDOWEVENT) {
       switch(e->window.event) {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
-          //gScreenSurface -> w = e -> window.data1;
-          //gScreenSurface -> h = e -> window.data2;
-          //SDL_FreeSurface(gScreenBuffer);
-          //gScreenBuffer = SDL_CreateRGBSurfaceWithFormat(0,gScreenSurface->w,gScreenSurface->h,8,SDL_PIXELFORMAT_RGB332);
-          //F_getmaxxy(gWindowx,gWindowy);
-          //printf("resize\n");
+          SDL_FreeSurface(gScreenSurface);
+          gScreenSurface = SDL_GetWindowSurface(gWindow);
+          F_getmaxxy(gWindowx,gWindowy);
           break;
       }
     }
@@ -159,9 +158,9 @@ void F_MVputch(int x, int y, int c) {
   SDL_Rect scr = {fontX, fontY, F_x_size, F_y_size};
   SDL_Rect dst = {pixX, pixY, F_x_size, F_y_size};
 
-  SDL_FillRect(gScreenBuffer,&dst,SDL_MapRGB(gScreenBuffer -> format,F_colors[color_pair][1].red,F_colors[color_pair][1].green,F_colors[color_pair][1].blue));
+  SDL_FillRect(gScreenSurface,&dst,SDL_MapRGB(gScreenSurface -> format,F_colors[color_pair][1].red,F_colors[color_pair][1].green,F_colors[color_pair][1].blue));
   SDL_SetSurfaceColorMod(gFont,F_colors[color_pair][0].red,F_colors[color_pair][0].green,F_colors[color_pair][0].blue);
-  SDL_BlitScaled(gFont,&scr,gScreenBuffer,&dst);
+  SDL_BlitScaled(gFont,&scr,gScreenSurface,&dst);
 
 }
 

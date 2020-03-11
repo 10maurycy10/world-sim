@@ -205,9 +205,11 @@ void gameloop() {
           break;
         case MEN_INSPECT:
           if (map[cursorX][cursorY].Lmat == MAT_STONE)
-            F_printw(" STONE\n", 0, HELPXSTART + 2);
+            F_printw(" stone\n", 0, HELPXSTART + 2);
           else if (map[cursorX][cursorY].Lmat == MAT_GRASS)
-            F_printw(" GRASS\n", 0, HELPXSTART + 2);
+            F_printw(" grass\n", 0, HELPXSTART + 2);
+          else if (map[cursorX][cursorY].Lmat == MAT_UNDISCOVERED)
+            F_printw(" un-known\n", 0, HELPXSTART + 2);
       }
       F_move(0, 0);
       if (mspt != 0)
