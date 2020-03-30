@@ -25,7 +25,6 @@ struct Raw {
   int stoneMelt;    //normlized temp
   int grassRegrow; //time
   double seaLeval;     //normlized elivatin
-  int MSPT;        //milli secons per tick
 };
 
 
@@ -33,7 +32,7 @@ struct Raw {
 void loadObj(struct Raw *data) {
   gSealeval = 0;
   gGrasregrow = 60;
-  gMSPT = 25;
+  gMSPT = 30;
 }
 
 int frame = 0;

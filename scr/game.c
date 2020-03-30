@@ -61,15 +61,15 @@ int running;
 
 bool gameIo(int key, struct Config data) {
 
-  // if (map==NULL) { //UMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-  //  return 1;
-  //}
+   printf("%x",key);
   
   switch (menueState) {
     case MEN_MAIN:
       switch (key) {
         case K_EXIT:
           running = RS_MAIN;
+          for (int i = 0;i < 256;i++)
+            free(matNames[i]);
           break;
         case K_LEFT:
           if (cursorX > 4)
@@ -118,7 +118,6 @@ bool gameIo(int key, struct Config data) {
       default:
         menueState = MEN_MAIN;
   }
-
   switch (key) {
     case 0:
       return 1;
@@ -138,9 +137,9 @@ bool gameIo(int key, struct Config data) {
 
     case K_debug:
       F_move(0, 20);
-      printf("type: %d, ", map[cursorX][cursorY].Lmat);
-      printf("data: %d, ", map[cursorX][cursorY].LairData.mosstimer);
-      printf("gMSPT: %d", (int)gMSPT);
+      printf("Ltype: %d, ", map[cursorX][cursorY].Lmat);
+      printf("Ftype: %d, ", map[cursorX][cursorY].Fmat);
+      printf("has space %s", gMats[map[cursorX][cursorY].Lmat].matVoid?"true":"false");
       F_more();
   }
 
@@ -175,11 +174,12 @@ void gameloop() {
   F_ATTR(F_COLOR_PAIR(C_OK));
   F_printw("\t\t[DONE]\n", 0, 0);
   F_ATTR(F_COLOR_PAIR(C_TEXT));
+  //F_more();
   F_getmaxxy(gWindowx, gWindowy);
   // printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
 
-  int lastFrame = clock();
-  int lastTick = clock();
+  int lastFrame = 0;
+  int lastTick = 0;
   int mspt = 0;
   int key = 0;
   profile(T_spin);
@@ -204,12 +204,13 @@ void gameloop() {
           F_printw("K : Inspect\n", HELPXSTART + 2, 0);
           break;
         case MEN_INSPECT:
-          if (map[cursorX][cursorY].Lmat == MAT_STONE)
-            F_printw(" stone\n", 0, HELPXSTART + 2);
-          else if (map[cursorX][cursorY].Lmat == MAT_GRASS)
-            F_printw(" grass\n", 0, HELPXSTART + 2);
-          else if (map[cursorX][cursorY].Lmat == MAT_UNDISCOVERED)
+          if (!map[cursorX][cursorY].discoverd)
             F_printw(" un-known\n", 0, HELPXSTART + 2);
+          else {
+            F_printw("%s",HELPXSTART + 2,1,(!gMats[map[cursorX][cursorY].Lmat].matVoid)?matNames[map[cursorX][cursorY].Fmat]:matNames[map[cursorX][cursorY].Fmat]);
+            if (gMats[map[cursorX][cursorY].Lmat].matVoid)
+              F_printw(" floor",HELPXSTART + 2,0);
+          }
       }
       F_move(0, 0);
       if (mspt != 0)
@@ -217,8 +218,7 @@ void gameloop() {
       else
         F_printw("\ttps: infinity", 0, 0);
       maprender();
-      gameIo(key, dataconfig);
-      SDL_Delay(10);
+      
       profile(T_present);
       F_refresh();
       profile(T_spin);
@@ -231,7 +231,10 @@ void gameloop() {
       //printf("event");
       if (e.type == SDL_KEYDOWN) {
         key = e.key.keysym.sym;
+        gameIo(key, dataconfig);
       } else if (e.type == SDL_WINDOWEVENT_CLOSE) {
+        for (int i = 0;i < 256;i++)
+          free(matNames[i]);
         running = RS_CLOSE;
         return;
       }
@@ -368,7 +371,6 @@ void game(SDL_RWops *configfile) {
         gend();
         F_end();
         _Exit(0);
-        // DOES NOT DEALOCK MAP & NMAP
         break;
       case RS_GAME:
         gameloop();

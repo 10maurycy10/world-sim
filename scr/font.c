@@ -205,7 +205,7 @@ void F_printw(char *x,int b, int n, ...) {
               F_putch(str[e]);
             else
               F_cursorx++;
-            if (str[e - 1] == '\n') {
+            if (str[e] == '\n') {
               F_cursory++;
               F_cursorx = b;
             }
@@ -230,11 +230,11 @@ void F_printw(char *x,int b, int n, ...) {
         F_putch(x[i]);
       else
         F_cursorx++;
-      i++;
-      if (x[i - 1] == '\n') {
+      if (x[i] == '\n') {
         F_cursory++;
         F_cursorx = b;
       }
+      i++;
     }
   }
 }

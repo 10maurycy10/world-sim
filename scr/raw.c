@@ -1,7 +1,7 @@
 char* matNames[256];
 
-int getMat(char* mat) { //DO NOT RUN OUSIDE OF READ RAW OR LOAD MATS
-  for (int i = 0;i < 256;i++) {
+int getMat(char* mat) {
+  for (int i = 0;i < 256 && matNames[i];i++) {
     if (!strcmp(matNames[i],mat)) {
       return i;
     }
@@ -31,6 +31,12 @@ int ScanColor(char* buffer,int* i) {
 }
 
 void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
+
+  gMats[id].matMelt = __INT_MAX__;
+  gMats[id].matDecompTemp = __INT_MAX__;
+  gMats[id].matDecompTo = -1;
+  gMats[id].matVoid = 0;
+
   skipcoments(buffer, i, sizeb);
   while (stringmatch(buffer, i, "", sizeb)) {
     skipcoments(buffer, i, sizeb);
@@ -51,11 +57,11 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
       for (int c = 0; c < 3; c++)
         if (buffer[*i] == '\\') {
           (*i)++;
-          matTexture[id][pos] = buffer[(*i)];
+          gMats[id].matTexture[pos] = buffer[(*i)];
           (*i)++;
           pos++;
         } else {
-          matTexture[id][pos] = buffer[(*i)];
+          gMats[id].matTexture[pos] = buffer[(*i)];
           (*i)++;
           pos++;
         }
@@ -69,13 +75,13 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad ORGANIC: tag unclosed");
       }
-      matDecompTo[id] = getMat("STONE");
-      matDecompTemp[id] = 1180;
+      gMats[id].matDecompTo = getMat("STONE");
+      gMats[id].matDecompTemp = 1180;
     } else if (stringmatch(buffer, i, "[MELT", sizeb)) {
       skipcoments(buffer, i, sizeb);
       matchcol(buffer, i, sizeb);
       //skipcoments(buffer, i, sizeb);
-      matMelt[id] = readint(buffer,i,sizeb,0,99999);
+      gMats[id].matMelt = readint(buffer,i,sizeb,0,99999);
       skipcoments(buffer, i, sizeb);
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad MELT: tag unclosed");
@@ -84,13 +90,21 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
       for (int e = 0;e < 3;e++) {
         skipcoments(buffer,i,sizeb);
         matchcol(buffer,i,sizeb);
-        matCol[id][e] = ScanColor(buffer,i);
+        gMats[id].matCol[e] = ScanColor(buffer,i);
       }
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad COLOR: tag unclosed");
       }
+    } else if (stringmatch(buffer, i, "[VOID", sizeb)) {
+      gMats[id].matVoid = 1;
+      if (!stringmatch(buffer, i, "]", sizeb)) {
+        configerror("bad VOID: tag unclosed");
+      }
+    } else if (0) {
+
     } else {
       configerror("unrecognized tag in mat");
+      
     }
     skipcoments(buffer, i, sizeb);
   }
@@ -116,6 +130,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
 
       matchcol(buffer, &i, sizeb);
       matNames[id] = getstrtag(buffer,&i,sizeb);
+      printf("%s\n",matNames[id]);
       matchcol(buffer, &i, sizeb);
       readmat(buffer, &i, sizeb, id);
       skipcoments(buffer, &i, sizeb);
@@ -126,12 +141,12 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
       id++;
 
     } else {
+      printf("%s",&buffer[i]);
       configerror("unrecognized tag in raw");
     }
     skipcoments(buffer, &i, sizeb);
   }
   free(buffer);
   loadMats();
-  for (int i = 0;i < 256;i++)
-    free(matNames[id]);
+
 }
