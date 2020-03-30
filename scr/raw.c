@@ -36,6 +36,7 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
   gMats[id].matDecompTemp = __INT_MAX__;
   gMats[id].matDecompTo = -1;
   gMats[id].matVoid = 0;
+  gMats[id].mat_name = NULL;
 
   skipcoments(buffer, i, sizeb);
   while (stringmatch(buffer, i, "", sizeb)) {
@@ -100,11 +101,16 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad VOID: tag unclosed");
       }
-    } else if (0) {
+    } else if (stringmatch(buffer, i, "[DESC", sizeb)) {
+      matchcol(buffer,i,sizeb);
+      gMats[id].mat_name = getstrtag(buffer,i,__INT_MAX__);
+      if (!stringmatch(buffer, i, "]", sizeb)) {
+        configerror("bad DESK: tag unclosed");
+      }
 
     } else {
+      printf("%s\n",&(buffer[*i]));
       configerror("unrecognized tag in mat");
-      
     }
     skipcoments(buffer, i, sizeb);
   }
@@ -130,7 +136,6 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
 
       matchcol(buffer, &i, sizeb);
       matNames[id] = getstrtag(buffer,&i,sizeb);
-      printf("%s\n",matNames[id]);
       matchcol(buffer, &i, sizeb);
       readmat(buffer, &i, sizeb, id);
       skipcoments(buffer, &i, sizeb);

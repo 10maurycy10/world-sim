@@ -61,7 +61,7 @@ int running;
 
 bool gameIo(int key, struct Config data) {
 
-   printf("%x",key);
+  int buffer;
   
   switch (menueState) {
     case MEN_MAIN:
@@ -94,6 +94,15 @@ bool gameIo(int key, struct Config data) {
       break;
     case MEN_INSPECT:
       switch (key) {
+        case SDLK_e:
+          printf("\nLmat? ");
+          scanf("%d ", &buffer);
+          map[cursorX][cursorY].Lmat = buffer;
+          
+          printf("\nFmat? ");
+          scanf("%d ", &buffer);
+          map[cursorX][cursorY].Fmat = buffer;
+        break;
         case K_EXIT:
           menueState = MEN_MAIN;
           break;
@@ -123,7 +132,7 @@ bool gameIo(int key, struct Config data) {
       return 1;
 
     case K_LAND:
-      map[cursorX][cursorY].Lmat = MAT_GRASS;
+      map[cursorX][cursorY].Fmat = MAT_GRASS;
       map[cursorX][cursorY].temperature = 0.0f;
       break;
     case K_WATER:
@@ -207,7 +216,7 @@ void gameloop() {
           if (!map[cursorX][cursorY].discoverd)
             F_printw(" un-known\n", 0, HELPXSTART + 2);
           else {
-            F_printw("%s",HELPXSTART + 2,1,(!gMats[map[cursorX][cursorY].Lmat].matVoid)?matNames[map[cursorX][cursorY].Fmat]:matNames[map[cursorX][cursorY].Fmat]);
+            F_printw("%s",HELPXSTART + 2,1,(!gMats[map[cursorX][cursorY].Lmat].matVoid)?gMats[map[cursorX][cursorY].Fmat].mat_name:gMats[map[cursorX][cursorY].Fmat].mat_name);
             if (gMats[map[cursorX][cursorY].Lmat].matVoid)
               F_printw(" floor",HELPXSTART + 2,0);
           }

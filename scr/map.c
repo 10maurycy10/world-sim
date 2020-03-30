@@ -8,6 +8,7 @@ int getMat(char *);
 
 struct MAT {
   char matTexture[3];
+  char* mat_name;
   int matMelt;
   int matDecompTemp;
   int matDecompTo;
