@@ -7,9 +7,9 @@ Colons delimitate sections of a tag.
   [MELT: 1000]
 ]
 [MAT:"AIR": <- this is a material deceleration, it is a super tag (a tag that contains tags in a part of it).
-  [DRAW: "AIR"]
   [VOID]
-  [COLOR:RED:YELLOW:ERROR]
+  [DRAW:"..."]
+  [COLOR:TEXT:ERROR:ERROR]
 ]
 [MAT:"GRASS":
   [DRAW: "XXX"] This value is currently ignored due to no support for varied tyle-sets in raws. (for now)
