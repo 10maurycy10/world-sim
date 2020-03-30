@@ -137,7 +137,7 @@ bool gameIo(int key, struct Config data) {
       break;
     case K_WATER:
       map[cursorX][cursorY].Lmat = MAT_STONE;
-      map[cursorX][cursorY].temperature = 0.0f;
+      map[cursorX][cursorY].temperature = 1000;
       map[cursorX][cursorY].LairData.mosstimer = -1;
       break;
     case K_LAVA:
@@ -216,7 +216,7 @@ void gameloop() {
           if (!map[cursorX][cursorY].discoverd)
             F_printw(" un-known\n", 0, HELPXSTART + 2);
           else {
-            F_printw("%s",HELPXSTART + 2,1,(!gMats[map[cursorX][cursorY].Lmat].matVoid)?gMats[map[cursorX][cursorY].Fmat].mat_name:gMats[map[cursorX][cursorY].Fmat].mat_name);
+            F_printw("%s",HELPXSTART + 2,1,(gMats[map[cursorX][cursorY].Lmat].matVoid)?gMats[map[cursorX][cursorY].Fmat].mat_name:gMats[map[cursorX][cursorY].Lmat].mat_name);
             if (gMats[map[cursorX][cursorY].Lmat].matVoid)
               F_printw(" floor",HELPXSTART + 2,0);
           }
@@ -234,7 +234,6 @@ void gameloop() {
     }
     //lastFrame = clock();
 
-    profile(T_input);
     key = 0;
     while (F_gete(&e)) {
       //printf("event");

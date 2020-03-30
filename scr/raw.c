@@ -132,7 +132,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
   skipcoments(buffer, &i, sizeb);
   while (buffer[i]) {
     skipcoments(buffer, &i, sizeb);
-    if (stringmatch(buffer, &i, "[MAT", sizeb)) {
+    if (stringmatch(buffer, &i, "[MAT_DEF", sizeb)) {
 
       matchcol(buffer, &i, sizeb);
       matNames[id] = getstrtag(buffer,&i,sizeb);
@@ -144,6 +144,20 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
         configerror("bad MAT: tag unclosed");
       }
       id++;
+
+    } else if (stringmatch(buffer, &i, "[MAT_SELECT", sizeb)) {
+
+      char* name = NULL;
+
+      matchcol(buffer, &i, sizeb);
+      name = getstrtag(buffer,&i,sizeb);
+      matchcol(buffer, &i, sizeb);
+      readmat(buffer, &i, sizeb, getMat(name));
+      skipcoments(buffer, &i, sizeb);
+
+      if (!stringmatch(buffer, &i, "]", sizeb)) {
+        configerror("bad MAT SELECT: tag unclosed");
+      }
 
     } else {
       printf("%s",&buffer[i]);

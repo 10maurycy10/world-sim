@@ -32,7 +32,7 @@ struct Raw {
 void loadObj(struct Raw *data) {
   gSealeval = 0;
   gGrasregrow = 60;
-  gMSPT = 30;
+  gMSPT = 34;
 }
 
 int frame = 0;
