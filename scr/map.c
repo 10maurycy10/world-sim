@@ -8,12 +8,14 @@ int getMat(char *);
 
 struct MAT {
   char matTexture[3];
-  char* mat_name;
+  bool mossy;
+  char *mat_name;
   int matMelt;
   int matDecompTemp;
   int matDecompTo;
   int matCol[3];
-  SDL_bool matVoid;
+  bool matVoid;
+  bool matgrownd;
 };
 
 struct MAT gMats[256];
@@ -30,8 +32,8 @@ struct Tyle {
   int32_t temperature; // 1000 = 0c  1100 = 100c
   uint16_t Lmat;
   uint16_t Fmat;
-  SDL_bool discoverd;
-  union LData {
+  bool discoverd;
+  struct LData {
     int16_t mosstimer;
   } LairData;
   //uint16_t Ftype;
@@ -50,17 +52,16 @@ struct Save {
 struct Tyle **map;
 struct Tyle **nmap;
 
-
-void reveleMap(int x,int y) {
+void reveleMap(int x, int y) {
   map[x][y].discoverd = 1;
   if (x > 0)
-    map[x-1][y].discoverd = 1;
+    map[x - 1][y].discoverd = 1;
   if (x < gMapx - 1)
-    map[x+1][y].discoverd = 1;
+    map[x + 1][y].discoverd = 1;
   if (y > 0)
-    map[x][y-1].discoverd = 1;
+    map[x][y - 1].discoverd = 1;
   if (y < gMapy - 1)
-    map[x][y+1].discoverd = 1;
+    map[x][y + 1].discoverd = 1;
 }
 
 void genaratemap(int seed) { //reset the map
@@ -115,7 +116,7 @@ void genaratemap(int seed) { //reset the map
       if (map[x][y].Lmat == MAT_STONE) {
         map[x][y].LairData.mosstimer = -1;
       } else if (map[x][y].Lmat == MAT_AIR) {
-        reveleMap(x,y);
+        reveleMap(x, y);
       }
     }
   }
@@ -178,7 +179,6 @@ void saveSave(struct Config data) {
   free(save);
 }
 
-
 void dotyle(int x, int y, struct Tyle *dest) {
   (*dest) = map[x][y];
   if (y != 0 && y != (MAPY - 1)) {
@@ -187,23 +187,33 @@ void dotyle(int x, int y, struct Tyle *dest) {
     }
   }
 
-  if (map[x][y].Lmat == MAT_STONE) {
-    if (map[x][y].LairData.mosstimer > -1) {
+  if (gMats[map[x][y].Lmat].mossy) {
+    if (map[x][y].temperature > 1100)
+      dest->LairData.mosstimer = gGrasregrow;
+    if (map[x][y].LairData.mosstimer > -1 && map[x][y].temperature < 1100) { //regrow if temp is less than 100 c and it is enabled
       if (map[x][y].LairData.mosstimer > 0)
         dest->LairData.mosstimer--;
       if (map[x][y].LairData.mosstimer == 0)
         dest->Lmat = MAT_GRASS;
     }
-  } else if (map[x][y].Fmat == MAT_GRASS) {
-    if (map[x][y].temperature > gMats[MAT_GRASS].matDecompTemp) {
+  }
+  if (gMats[map[x][y].Fmat].mossy) {
+    if (map[x][y].temperature > 1100)
       dest->LairData.mosstimer = gGrasregrow;
+    if (map[x][y].LairData.mosstimer > -1 && map[x][y].temperature < 1100) { //regrow if temp is less than 100 c and it is enabled
+      if (map[x][y].LairData.mosstimer > 0)
+        dest->LairData.mosstimer--;
+      if (map[x][y].LairData.mosstimer == 0)
+        dest->Fmat = MAT_GRASS;
     }
   }
   if (dest->temperature > gMats[dest->Lmat].matDecompTemp && gMats[dest->Lmat].matDecompTemp > -1) {
     dest->Lmat = gMats[dest->Lmat].matDecompTo;
+    dest->LairData.mosstimer = gGrasregrow;
   }
   if (dest->temperature > gMats[dest->Fmat].matDecompTemp && gMats[dest->Fmat].matDecompTemp > -1) {
     dest->Fmat = gMats[dest->Fmat].matDecompTo;
+    dest->LairData.mosstimer = gGrasregrow;
   }
 }
 
@@ -229,6 +239,8 @@ void renderchar(int x, int y, int xpos, int ypos) { //render a x:x(map) y:y(map)
     state = map[x][y].temperature > gMats[map[x][y].Fmat].matMelt; //draw the floor
     attr = F_COLOR_PAIR(gMats[map[x][y].Fmat].matCol[state]);
     tylech = gMats[map[x][y].Fmat].matTexture[state];
+    if (!gMats[map[x][y].Fmat].matgrownd)
+      tylech = '`';
     if (map[x][y].Fmat == MAT_GRASS) {
       tylech = gGrass[((y ^ (gGrasscount / 2)) ^ ((x + 1) ^ ((gGrasscount)))) % gGrasscount];
     }
@@ -240,7 +252,7 @@ void renderchar(int x, int y, int xpos, int ypos) { //render a x:x(map) y:y(map)
   if ((y == cursorY) && (x == cursorX) && ((frame % 60) > 30) && !(menueState == MEN_MAIN)) {
     tylech = 'X';
     attr = (F_COLOR_PAIR(C_HIGH));
-  } else if (!map[x][y].discoverd){
+  } else if (!map[x][y].discoverd) {
     tylech = ' ';
     attr = F_COLOR_PAIR(C_TEXT);
   }

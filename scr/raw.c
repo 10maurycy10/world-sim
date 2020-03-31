@@ -1,8 +1,9 @@
-char* matNames[256];
+char *matNames[256];
+int matNum = 0;
 
-int getMat(char* mat) {
-  for (int i = 0;i < 256 && matNames[i];i++) {
-    if (!strcmp(matNames[i],mat)) {
+int getMat(char *mat) {
+  for (int i = 0; i < 256 && matNames[i]; i++) {
+    if (!strcmp(matNames[i], mat)) {
       return i;
     }
   }
@@ -10,33 +11,41 @@ int getMat(char* mat) {
   return 0;
 }
 
-int ScanColor(char* buffer,int* i) {
-  skipspace(buffer,i,256);
-  if (stringmatch(buffer,i,"ERROR",strlen(buffer))) {
-    return(C_ERROR);
+int ScanColor(char *buffer, int *i) {
+  skipspace(buffer, i, 256);
+  if (stringmatch(buffer, i, "ERROR", strlen(buffer))) {
+    return (C_ERROR);
   }
-  if (stringmatch(buffer,i,"TEXT",strlen(buffer))) {
-    return(C_TEXT);
+  if (stringmatch(buffer, i, "TEXT", strlen(buffer))) {
+    return (C_TEXT);
   }
-  if (stringmatch(buffer,i,"RED",strlen(buffer))) {
-    return(C_MAGMA);
+  if (stringmatch(buffer, i, "DIM", strlen(buffer))) {
+    return (C_DIM);
   }
-  if (stringmatch(buffer,i,"YELLOW",strlen(buffer))) {
-    return(C_HIGH);
+  if (stringmatch(buffer, i, "RED", strlen(buffer))) {
+    return (C_MAGMA);
   }
-  if (stringmatch(buffer,i,"GREEN",strlen(buffer))) {
-    return(C_GRASS);
+  if (stringmatch(buffer, i, "YELLOW", strlen(buffer))) {
+    return (C_HIGH);
   }
-  return(C_ERROR);
+  if (stringmatch(buffer, i, "GREEN", strlen(buffer))) {
+    return (C_GRASS);
+  }
+  return (C_ERROR);
 }
 
-void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
+void readmat(char *buffer, int *i, int sizeb, int id, bool init) { //read a mat to mem
 
-  gMats[id].matMelt = __INT_MAX__;
-  gMats[id].matDecompTemp = __INT_MAX__;
-  gMats[id].matDecompTo = -1;
-  gMats[id].matVoid = 0;
-  gMats[id].mat_name = NULL;
+  if (init) {
+
+    gMats[id].mossy = 0;
+    gMats[id].matgrownd = 0;
+    gMats[id].matMelt = __INT_MAX__;
+    gMats[id].matDecompTemp = __INT_MAX__;
+    gMats[id].matDecompTo = -1;
+    gMats[id].matVoid = 0;
+    gMats[id].mat_name = NULL;
+  }
 
   skipcoments(buffer, i, sizeb);
   while (stringmatch(buffer, i, "", sizeb)) {
@@ -82,16 +91,21 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
       skipcoments(buffer, i, sizeb);
       matchcol(buffer, i, sizeb);
       //skipcoments(buffer, i, sizeb);
-      gMats[id].matMelt = readint(buffer,i,sizeb,0,99999);
+      gMats[id].matMelt = readint(buffer, i, sizeb, 0, 99999);
       skipcoments(buffer, i, sizeb);
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad MELT: tag unclosed");
       }
+    } else if (stringmatch(buffer, i, "[MOSS", sizeb)) {
+      if (!stringmatch(buffer, i, "]", sizeb)) {
+        configerror("bad MOSS: tag unclosed");
+      }
+      gMats[id].mossy = 1;
     } else if (stringmatch(buffer, i, "[COLOR", sizeb)) {
-      for (int e = 0;e < 3;e++) {
-        skipcoments(buffer,i,sizeb);
-        matchcol(buffer,i,sizeb);
-        gMats[id].matCol[e] = ScanColor(buffer,i);
+      for (int e = 0; e < 3; e++) {
+        skipcoments(buffer, i, sizeb);
+        matchcol(buffer, i, sizeb);
+        gMats[id].matCol[e] = ScanColor(buffer, i);
       }
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad COLOR: tag unclosed");
@@ -101,15 +115,20 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad VOID: tag unclosed");
       }
+    } else if (stringmatch(buffer, i, "[FLOOR", sizeb)) {
+      if (!stringmatch(buffer, i, "]", sizeb)) {
+        configerror("bad ORGANIC: tag unclosed");
+      }
+      gMats[id].matgrownd = 1;
     } else if (stringmatch(buffer, i, "[DESC", sizeb)) {
-      matchcol(buffer,i,sizeb);
-      gMats[id].mat_name = getstrtag(buffer,i,__INT_MAX__);
+      matchcol(buffer, i, sizeb);
+      gMats[id].mat_name = getstrtag(buffer, i, __INT_MAX__);
       if (!stringmatch(buffer, i, "]", sizeb)) {
         configerror("bad DESK: tag unclosed");
       }
 
     } else {
-      printf("%s\n",&(buffer[*i]));
+      printf("%s\n", &(buffer[*i]));
       configerror("unrecognized tag in mat");
     }
     skipcoments(buffer, i, sizeb);
@@ -117,6 +136,7 @@ void readmat(char *buffer, int *i, int sizeb, int id) { //read a mat to mem
 }
 
 void readraw(SDL_RWops *file, struct Raw *raw) {
+  matNum = 0;
   int i = 0;
   int sizeb = 0;
   int id = 0;
@@ -135,24 +155,25 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
     if (stringmatch(buffer, &i, "[MAT_DEF", sizeb)) {
 
       matchcol(buffer, &i, sizeb);
-      matNames[id] = getstrtag(buffer,&i,sizeb);
+      matNames[id] = getstrtag(buffer, &i, sizeb);
       matchcol(buffer, &i, sizeb);
-      readmat(buffer, &i, sizeb, id);
+      readmat(buffer, &i, sizeb, id, true);
       skipcoments(buffer, &i, sizeb);
 
       if (!stringmatch(buffer, &i, "]", sizeb)) {
         configerror("bad MAT: tag unclosed");
       }
       id++;
+      matNum++;
 
     } else if (stringmatch(buffer, &i, "[MAT_SELECT", sizeb)) {
 
-      char* name = NULL;
+      char *name = NULL;
 
       matchcol(buffer, &i, sizeb);
-      name = getstrtag(buffer,&i,sizeb);
+      name = getstrtag(buffer, &i, sizeb);
       matchcol(buffer, &i, sizeb);
-      readmat(buffer, &i, sizeb, getMat(name));
+      readmat(buffer, &i, sizeb, getMat(name), false);
       skipcoments(buffer, &i, sizeb);
 
       if (!stringmatch(buffer, &i, "]", sizeb)) {
@@ -160,12 +181,11 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
       }
 
     } else {
-      printf("%s",&buffer[i]);
+      printf("%s", &buffer[i]);
       configerror("unrecognized tag in raw");
     }
     skipcoments(buffer, &i, sizeb);
   }
   free(buffer);
   loadMats();
-
 }

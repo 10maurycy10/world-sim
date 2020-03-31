@@ -26,13 +26,15 @@ enum colors {
 
 enum MEN { MEN_MAIN,
            MEN_INSPECT,
-           MEN_PLACE };
+           MEN_PLACE,
+           MEN_PLACE_FLOOR,
+           MEN_PLACE_LAIR };
 int menueState = MEN_MAIN;
 
 void gend();
 #include "env.h"
 #include "font.c"
-int cursorX = 1, cursorY = 1;
+int cursorX = 0, cursorY = 0;
 #include "config.c"
 #include "map.c"
 #include "raw.c"
@@ -43,14 +45,18 @@ enum controls {
   K_UP = SDLK_UP,
   K_DOWN = SDLK_DOWN,
   K_RIGHT = SDLK_RIGHT,
-  K_INSPECT = SDLK_k,
 
+  K_MEN_UP = SDLK_EQUALS,
+  K_MEN_DOWN = SDLK_MINUS,
+
+  K_INSPECT = SDLK_k,
   K_EXIT = SDLK_q,
+  K_build = SDLK_b,
+  K_LAVA = SDLK_RETURN,
   K_RESTART = SDLK_r,
 
-  K_LAND = SDLK_z,
-  K_WATER = SDLK_x,
-  K_LAVA = SDLK_c,
+  K_FLOOR = SDLK_f,
+  K_LAIR = SDLK_w,
 
   K_load = SDLK_o,
   K_save = SDLK_p,
@@ -59,33 +65,33 @@ enum controls {
 
 int running;
 
+int Buildmat;
+
+void menBuild(bool isTop) {
+  for (int i = 0; i < matNum; i++) {
+    if (Buildmat == i)
+      F_ATTR(F_COLOR_PAIR(C_TEXT));
+    else
+      F_ATTR(F_COLOR_PAIR(C_DIM));
+    F_printw("%s\n", HELPXSTART + 2, 1, gMats[i].mat_name);
+  }
+}
+
 bool gameIo(int key, struct Config data) {
 
-  int buffer;
-  
+  int cursorStep = 0;
+
   switch (menueState) {
     case MEN_MAIN:
+      cursorStep = 5;
       switch (key) {
         case K_EXIT:
           running = RS_MAIN;
-          for (int i = 0;i < 256;i++)
+          for (int i = 0; i < 256; i++)
             free(matNames[i]);
           break;
-        case K_LEFT:
-          if (cursorX > 4)
-            cursorX -= 5;
-          break;
-        case K_RIGHT:
-          if (cursorX < MAPX - 5)
-            cursorX += 5;
-          break;
-        case K_UP:
-          if (cursorY > 4)
-            cursorY -= 5;
-          break;
-        case K_DOWN:
-          if (cursorY < MAPY - 5)
-            cursorY += 5;
+        case K_build:
+          menueState = MEN_PLACE;
           break;
         case K_INSPECT:
           menueState = MEN_INSPECT;
@@ -93,63 +99,101 @@ bool gameIo(int key, struct Config data) {
       }
       break;
     case MEN_INSPECT:
+      cursorStep = 1;
       switch (key) {
-        case SDLK_e:
-          printf("\nLmat? ");
-          scanf("%d ", &buffer);
-          map[cursorX][cursorY].Lmat = buffer;
-          
-          printf("\nFmat? ");
-          scanf("%d ", &buffer);
-          map[cursorX][cursorY].Fmat = buffer;
-        break;
+        case K_debug:
+          F_move(0, 20);
+          printf("Ltype: %d,\n", map[cursorX][cursorY].Lmat);
+          printf("Ftype: %d,\n", map[cursorX][cursorY].Fmat);
+          printf("has space %s\n", gMats[map[cursorX][cursorY].Lmat].matVoid ? "true" : "false");
+          printf("moss: %d\n", map[cursorX][cursorY].LairData.mosstimer);
+          printf("temp: %d\n\n", map[cursorX][cursorY].temperature);
+          F_more();
+          break;
         case K_EXIT:
           menueState = MEN_MAIN;
           break;
-        case K_LEFT:
-          if (cursorX > 0)
-            cursorX -= 1;
+      }
+      break;
+    case MEN_PLACE:
+      cursorStep = 1;
+      switch (key) {
+        case K_LAIR:
+          menueState = MEN_PLACE_LAIR;
           break;
-        case K_RIGHT:
-          if (cursorX < MAPX - 1)
-            cursorX += 1;
+        case K_FLOOR:
+          menueState = MEN_PLACE_FLOOR;
           break;
-        case K_UP:
-          if (cursorY > 0)
-            cursorY -= 1;
+        case K_EXIT:
+          menueState = MEN_MAIN;
           break;
-        case K_DOWN:
-          if (cursorY < MAPY - 1)
-            cursorY += 1;
+        case K_LAVA:
+          map[cursorX][cursorY].temperature = 1000 + 5000;
+        break;
+      }
+      break;
+    case MEN_PLACE_FLOOR: //intencenal
+      cursorStep = 1;
+      switch (key) {
+        case K_EXIT:
+          menueState = MEN_MAIN;
+          break;
+        case K_OK:
+          map[cursorX][cursorY].Fmat = Buildmat;
+          break;
+        case K_MEN_UP:
+          Buildmat--;
+          if (Buildmat < 0)
+            Buildmat = matNum - 1;
+          break;
+        case K_MEN_DOWN:
+          Buildmat++;
+          Buildmat %= matNum;
           break;
       }
       break;
-      default:
-        menueState = MEN_MAIN;
+    case MEN_PLACE_LAIR:
+      cursorStep = 1;
+      switch (key) {
+        case K_EXIT:
+          menueState = MEN_MAIN;
+          break;
+        case K_OK:
+          map[cursorX][cursorY].Lmat = Buildmat;
+          break;
+        case K_MEN_UP:
+          Buildmat--;
+          if (Buildmat < 0)
+            Buildmat = matNum - 1;
+          break;
+        case K_MEN_DOWN:
+          Buildmat++;
+          Buildmat %= matNum;
+          break;
+      }
+      break;
+    default:
+      menueState = MEN_MAIN;
+      break;
   }
+
   switch (key) {
-    case 0:
-      return 1;
-
-    case K_LAND:
-      map[cursorX][cursorY].Fmat = MAT_GRASS;
-      map[cursorX][cursorY].temperature = 0.0f;
+    case K_LEFT:
+      if (cursorX > cursorStep - 1)
+        cursorX -= cursorStep;
       break;
-    case K_WATER:
-      map[cursorX][cursorY].Lmat = MAT_STONE;
-      map[cursorX][cursorY].temperature = 1000;
-      map[cursorX][cursorY].LairData.mosstimer = -1;
+    case K_RIGHT:
+      if (cursorX < MAPX - cursorStep)
+        cursorX += cursorStep;
       break;
-    case K_LAVA:
-      map[cursorX][cursorY].temperature = 10000;
+    case K_UP:
+      if (cursorY > cursorStep - 1)
+        cursorY -= cursorStep;
       break;
-
-    case K_debug:
-      F_move(0, 20);
-      printf("Ltype: %d, ", map[cursorX][cursorY].Lmat);
-      printf("Ftype: %d, ", map[cursorX][cursorY].Fmat);
-      printf("has space %s", gMats[map[cursorX][cursorY].Lmat].matVoid?"true":"false");
-      F_more();
+    case K_DOWN:
+      if (cursorY < MAPY - cursorStep)
+        cursorY += cursorStep;
+      break;
   }
 
   return 1;
@@ -211,23 +255,37 @@ void gameloop() {
         case MEN_MAIN:
           F_printw("Esc : Debug\n", HELPXSTART + 2, 0);
           F_printw("K : Inspect\n", HELPXSTART + 2, 0);
+          F_printw("B : Build\n", HELPXSTART + 2, 0);
           break;
         case MEN_INSPECT:
           if (!map[cursorX][cursorY].discoverd)
             F_printw(" un-known\n", 0, HELPXSTART + 2);
           else {
-            F_printw("%s",HELPXSTART + 2,1,(gMats[map[cursorX][cursorY].Lmat].matVoid)?gMats[map[cursorX][cursorY].Fmat].mat_name:gMats[map[cursorX][cursorY].Lmat].mat_name);
+            F_printw("%s", HELPXSTART + 2, 1, (gMats[map[cursorX][cursorY].Lmat].matVoid) ? gMats[map[cursorX][cursorY].Fmat].mat_name : gMats[map[cursorX][cursorY].Lmat].mat_name);
             if (gMats[map[cursorX][cursorY].Lmat].matVoid)
-              F_printw(" floor",HELPXSTART + 2,0);
+              F_printw(" floor", HELPXSTART + 2, 0);
           }
+          break;
+        case MEN_PLACE:
+          F_printw("W : Wall\n", HELPXSTART + 2, 0);
+          F_printw("F : Floor\n", HELPXSTART + 2, 0);
+          break;
+        case MEN_PLACE_FLOOR:
+          menBuild(0);
+          break;
+
+        case MEN_PLACE_LAIR:
+          menBuild(1);
+          break;
       }
       F_move(0, 0);
+      F_ATTR(F_COLOR_PAIR(C_TEXT));
       if (mspt != 0)
         F_printw("\ttps: %d", 0, 1, (int)(1000 / (mspt)) + 1);
       else
         F_printw("\ttps: infinity", 0, 0);
       maprender();
-      
+
       profile(T_present);
       F_refresh();
       profile(T_spin);
@@ -241,7 +299,7 @@ void gameloop() {
         key = e.key.keysym.sym;
         gameIo(key, dataconfig);
       } else if (e.type == SDL_WINDOWEVENT_CLOSE) {
-        for (int i = 0;i < 256;i++)
+        for (int i = 0; i < 256; i++)
           free(matNames[i]);
         running = RS_CLOSE;
         return;
