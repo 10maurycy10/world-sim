@@ -13,22 +13,22 @@ int getMat(char *mat) {
 
 int ScanColor(char *buffer, int *i) {
   skipspace(buffer, i, 256);
-  if (stringmatch(buffer, i, "ERROR", strlen(buffer))) {
+  if (stringmatch(buffer, i, "ERROR", strlen(buffer),false)) {
     return (C_ERROR);
   }
-  if (stringmatch(buffer, i, "TEXT", strlen(buffer))) {
+  if (stringmatch(buffer, i, "TEXT", strlen(buffer),false)) {
     return (C_TEXT);
   }
-  if (stringmatch(buffer, i, "DIM", strlen(buffer))) {
+  if (stringmatch(buffer, i, "DIM", strlen(buffer),false)) {
     return (C_DIM);
   }
-  if (stringmatch(buffer, i, "RED", strlen(buffer))) {
+  if (stringmatch(buffer, i, "RED", strlen(buffer),false)) {
     return (C_MAGMA);
   }
-  if (stringmatch(buffer, i, "YELLOW", strlen(buffer))) {
+  if (stringmatch(buffer, i, "YELLOW", strlen(buffer),false)) {
     return (C_HIGH);
   }
-  if (stringmatch(buffer, i, "GREEN", strlen(buffer))) {
+  if (stringmatch(buffer, i, "GREEN", strlen(buffer),false)) {
     return (C_GRASS);
   }
   return (C_ERROR);
@@ -48,19 +48,19 @@ void readmat(char *buffer, int *i, int sizeb, int id, bool init) { //read a mat 
   }
 
   skipcoments(buffer, i, sizeb);
-  while (stringmatch(buffer, i, "", sizeb)) {
+  while (stringmatch(buffer, i, "", sizeb,true)) {
     skipcoments(buffer, i, sizeb);
-    if (stringmatch(buffer, i, "]", sizeb)) {
+    if (stringmatch(buffer, i, "]", sizeb,false)) {
       (*i)--;
       return;
     }
-    if (stringmatch(buffer, i, "[DRAW", sizeb)) {
+    if (stringmatch(buffer, i, "[DRAW", sizeb,false)) {
 
       skipcoments(buffer, i, sizeb);
       matchcol(buffer, i, sizeb);
       skipcoments(buffer, i, sizeb);
 
-      if (!stringmatch(buffer, i, "\"", sizeb))
+      if (!stringmatch(buffer, i, "\"", sizeb,true))
         configerror("DRAW is mising a string!!!");
 
       int pos = 0;
@@ -75,55 +75,55 @@ void readmat(char *buffer, int *i, int sizeb, int id, bool init) { //read a mat 
           (*i)++;
           pos++;
         }
-      if (!stringmatch(buffer, i, "\"", sizeb))
+      if (!stringmatch(buffer, i, "\"", sizeb,true))
         configerror("DRAW is mising a string!!!");
       skipcoments(buffer, i, sizeb);
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad DRAW: tag unclosed");
       }
-    } else if (stringmatch(buffer, i, "[ORGANIC", sizeb)) {
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+    } else if (stringmatch(buffer, i, "[ORGANIC", sizeb,false)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad ORGANIC: tag unclosed");
       }
       gMats[id].matDecompTo = getMat("STONE");
       gMats[id].matDecompTemp = 1180;
-    } else if (stringmatch(buffer, i, "[MELT", sizeb)) {
+    } else if (stringmatch(buffer, i, "[MELT", sizeb,false)) {
       skipcoments(buffer, i, sizeb);
       matchcol(buffer, i, sizeb);
       //skipcoments(buffer, i, sizeb);
       gMats[id].matMelt = readint(buffer, i, sizeb, 0, 99999);
       skipcoments(buffer, i, sizeb);
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad MELT: tag unclosed");
       }
-    } else if (stringmatch(buffer, i, "[MOSS", sizeb)) {
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+    } else if (stringmatch(buffer, i, "[MOSS", sizeb,false)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad MOSS: tag unclosed");
       }
       gMats[id].mossy = 1;
-    } else if (stringmatch(buffer, i, "[COLOR", sizeb)) {
+    } else if (stringmatch(buffer, i, "[COLOR", sizeb,false)) {
       for (int e = 0; e < 3; e++) {
         skipcoments(buffer, i, sizeb);
         matchcol(buffer, i, sizeb);
         gMats[id].matCol[e] = ScanColor(buffer, i);
       }
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad COLOR: tag unclosed");
       }
-    } else if (stringmatch(buffer, i, "[VOID", sizeb)) {
+    } else if (stringmatch(buffer, i, "[VOID", sizeb,false)) {
       gMats[id].matVoid = 1;
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad VOID: tag unclosed");
       }
-    } else if (stringmatch(buffer, i, "[FLOOR", sizeb)) {
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+    } else if (stringmatch(buffer, i, "[FLOOR", sizeb,false)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad ORGANIC: tag unclosed");
       }
       gMats[id].matgrownd = 1;
-    } else if (stringmatch(buffer, i, "[DESC", sizeb)) {
+    } else if (stringmatch(buffer, i, "[DESC", sizeb,false)) {
       matchcol(buffer, i, sizeb);
       gMats[id].mat_name = getstrtag(buffer, i, __INT_MAX__);
-      if (!stringmatch(buffer, i, "]", sizeb)) {
+      if (!stringmatch(buffer, i, "]", sizeb,false)) {
         configerror("bad DESK: tag unclosed");
       }
 
@@ -152,7 +152,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
   skipcoments(buffer, &i, sizeb);
   while (buffer[i]) {
     skipcoments(buffer, &i, sizeb);
-    if (stringmatch(buffer, &i, "[MAT_DEF", sizeb)) {
+    if (stringmatch(buffer, &i, "[MAT_DEF", sizeb,false)) {
 
       matchcol(buffer, &i, sizeb);
       matNames[id] = getstrtag(buffer, &i, sizeb);
@@ -160,13 +160,13 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
       readmat(buffer, &i, sizeb, id, true);
       skipcoments(buffer, &i, sizeb);
 
-      if (!stringmatch(buffer, &i, "]", sizeb)) {
+      if (!stringmatch(buffer, &i, "]", sizeb,false)) {
         configerror("bad MAT: tag unclosed");
       }
       id++;
       matNum++;
 
-    } else if (stringmatch(buffer, &i, "[MAT_SELECT", sizeb)) {
+    } else if (stringmatch(buffer, &i, "[MAT_SELECT", sizeb,false)) {
 
       char *name = NULL;
 
@@ -176,7 +176,7 @@ void readraw(SDL_RWops *file, struct Raw *raw) {
       readmat(buffer, &i, sizeb, getMat(name), false);
       skipcoments(buffer, &i, sizeb);
 
-      if (!stringmatch(buffer, &i, "]", sizeb)) {
+      if (!stringmatch(buffer, &i, "]", sizeb,false)) {
         configerror("bad MAT SELECT: tag unclosed");
       }
 

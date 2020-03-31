@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <time.h>
 
+void fake(const char * a, ...) {}
+
+//#define printf fake
+
 enum RS { RS_CLOSE,
           RS_GAME,
           RS_MAIN };
@@ -140,6 +144,7 @@ bool gameIo(int key, struct Config data) {
           break;
         case K_OK:
           map[cursorX][cursorY].Fmat = Buildmat;
+          makeTyleStable(&map[cursorX][cursorY]);
           break;
         case K_MEN_UP:
           Buildmat--;
@@ -160,6 +165,7 @@ bool gameIo(int key, struct Config data) {
           break;
         case K_OK:
           map[cursorX][cursorY].Lmat = Buildmat;
+          makeTyleStable(&map[cursorX][cursorY]);
           break;
         case K_MEN_UP:
           Buildmat--;
@@ -229,7 +235,7 @@ void gameloop() {
   F_ATTR(F_COLOR_PAIR(C_TEXT));
   //F_more();
   F_getmaxxy(gWindowx, gWindowy);
-  // printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
+  // /////printf("X: %d Y: %d",(int)gWindowx,(int)gWindowy);
 
   int lastFrame = 0;
   int lastTick = 0;
@@ -259,7 +265,7 @@ void gameloop() {
           break;
         case MEN_INSPECT:
           if (!map[cursorX][cursorY].discoverd)
-            F_printw(" un-known\n", 0, HELPXSTART + 2);
+            F_printw("un-known\n", 0, HELPXSTART + 2);
           else {
             F_printw("%s", HELPXSTART + 2, 1, (gMats[map[cursorX][cursorY].Lmat].matVoid) ? gMats[map[cursorX][cursorY].Fmat].mat_name : gMats[map[cursorX][cursorY].Lmat].mat_name);
             if (gMats[map[cursorX][cursorY].Lmat].matVoid)
@@ -406,10 +412,10 @@ void game(SDL_RWops *configfile) {
 #endif
 #endif
 
-  // printf("F_init.\n");
+  // /////printf("F_init.\n");
   F_init();
 
-  // printf("F_initpair.\n");
+  // /////printf("F_initpair.\n");
   F_initpair(C_TEXT, 255, 255, 255, 0, 0, 0);
   F_initpair(C_DIM, 0xA0, 0xA0, 0xA0, 0, 0, 0);
   F_initpair(C_ERROR, 0, 0, 127, 255, 255, 0);

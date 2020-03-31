@@ -64,12 +64,18 @@ void reveleMap(int x, int y) {
     map[x][y + 1].discoverd = 1;
 }
 
+void makeTyleStable(struct Tyle *a) {
+  if (gMats[a -> Fmat].mossy || gMats[a -> Lmat].mossy) {
+    a->LairData.mosstimer = -1;
+  }
+}
+
 void genaratemap(int seed) { //reset the map
 
   srand(seed);
 
-  gMapy = 100;
-  gMapx = 100;
+  gMapy = 1000;
+  gMapx = 1000;
 
   if (map) {
     for (int i = 0; i < MAPX; i++) {

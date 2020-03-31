@@ -43,46 +43,46 @@ int readint(char *file, int *i, int size, int min, int max) {
   while ((*i) < (size)) {
     //printf("config.read int scaned %d : %c\n",*i , file[*i]);
     switch (file[*i]) { //code rep...
-    case '0':
-      val = (0 + val * 10);
-      break;
-    case '1':
-      val = (1 + val * 10);
-      break;
-    case '2':
-      val = (2 + val * 10);
-      break;
-    case '3':
-      val = (3 + val * 10);
-      break;
-    case '4':
-      val = (4 + val * 10);
-      break;
-    case '5':
-      val = (5 + val * 10);
-      break;
-    case '6':
-      val = (6 + val * 10);
-      break;
-    case '7':
-      val = (7 + val * 10);
-      break;
-    case '8':
-      val = (8 + val * 10);
-      break;
-    case '9':
-      val = (9 + val * 10);
-      break;
+      case '0':
+        val = (0 + val * 10);
+        break;
+      case '1':
+        val = (1 + val * 10);
+        break;
+      case '2':
+        val = (2 + val * 10);
+        break;
+      case '3':
+        val = (3 + val * 10);
+        break;
+      case '4':
+        val = (4 + val * 10);
+        break;
+      case '5':
+        val = (5 + val * 10);
+        break;
+      case '6':
+        val = (6 + val * 10);
+        break;
+      case '7':
+        val = (7 + val * 10);
+        break;
+      case '8':
+        val = (8 + val * 10);
+        break;
+      case '9':
+        val = (9 + val * 10);
+        break;
 
-    default:
-      if (val > max) {
-        configerror("to big int");
-      }
-      if (val < min) {
-        configerror("to small int");
-      }
-      return val;
-      break;
+      default:
+        if (val > max) {
+          configerror("to big int");
+        }
+        if (val < min) {
+          configerror("to small int");
+        }
+        return val;
+        break;
     }
     (*i)++;
   }
@@ -130,7 +130,7 @@ char *getstrtag(char *file, int *ip, int size) { //gets a string and malock() it
   return (string);        //return matched string
 }
 
-int8_t stringmatch(char *file, int *ip, char *str, int size) {
+int8_t stringmatch(char *file, int *ip, char *str, int size,bool force) {
   int i = 0;
   //printf("config.strmatch: maching : \"%s\" , i: %d\n" , str , *ip);
   while (str[i]) { //for all of instr
@@ -142,13 +142,18 @@ int8_t stringmatch(char *file, int *ip, char *str, int size) {
     }
     i++;
   }
-  *ip += i;
-  //printf("config.strmatch: mached : \"%s\" , i: %d\n" , str , *ip);
-  return 1;
+  if (force || file[*ip + i] == ' ' || file[*ip + i] == ':' || file[*ip + i] == ']' || file[*ip + i] == '[' || file[*ip + i] == 0 || file[*ip + i] == '\n' || file[*ip + i] == 0xd) {
+    *ip += i;
+    //printf("config.strmatch: mached : \"%s\" , i: %d\n" , str , *ip);
+    return 1;
+  } else {
+    printf("discarding not end '\\%x'",file[*ip + i]);
+  }
+  return 0;
 }
 
 void matchcol(char *file, int *ip, int size) {
-  if (!stringmatch(file, ip, ":", size)) {
+  if (!stringmatch(file, ip, ":", size,true)) {
     configerror("no col");
   }
 }
@@ -171,7 +176,7 @@ void readconfig(SDL_RWops *file, struct Config *configstruct) {
 
   i = 0;
   while (i < size) {
-    if (stringmatch(buffer, &i, "[savefile", size)) {
+    if (stringmatch(buffer, &i, "[savefile", size,false)) {
       skipcoments(buffer, &i, size);
       //printf("config.readconfig.savefileread: i : %d , curch: '%c' \n",i,buffer[i]);
       matchcol(buffer, &i, size);
@@ -183,11 +188,12 @@ void readconfig(SDL_RWops *file, struct Config *configstruct) {
 
       //printf("config.readconfig.savefileread: i : %d , curch: '%c' \n",i,buffer[i]);
       skipcoments(buffer, &i, size);
-      if (!stringmatch(buffer, &i, "]", size)) {
-        configerror("bad savefile tag unclosed");
+      if (!stringmatch(buffer, &i, "]", size,false)) {
+          //printf("'%c'",buffer[i]);
+          configerror("bad savefile tag unclosed");
       }
     } else {
-      if (stringmatch(buffer, &i, "[raw", size)) {
+      if (stringmatch(buffer, &i, "[raw", size,false)) {
         skipcoments(buffer, &i, size);
         matchcol(buffer, &i, size);
         skipcoments(buffer, &i, size);
@@ -202,18 +208,18 @@ void readconfig(SDL_RWops *file, struct Config *configstruct) {
         free(strp);
 
         skipcoments(buffer, &i, size);
-        if (!stringmatch(buffer, &i, "]", size)) {
-          configerror("bad savefile tag unclosed");
+        if (!stringmatch(buffer, &i, "]", size,false)) {
+          configerror("bad rawfile tag unclosed");
         }
-      } else if (stringmatch(buffer, &i, "[font", size)) {
+      } else if (stringmatch(buffer, &i, "[font", size,false)) {
         skipcoments(buffer, &i, size);
         matchcol(buffer, &i, size);
         skipcoments(buffer, &i, size);
         strp = getstrtag(buffer, &i, size);
         configstruct->font = strp;
         skipcoments(buffer, &i, size);
-        if (!stringmatch(buffer, &i, "]", size)) {
-          configerror("bad savefile tag unclosed");
+        if (!stringmatch(buffer, &i, "]", size,false)) {
+          configerror("bad font tag unclosed");
         }
       } else {
         configerror("bad entry");
