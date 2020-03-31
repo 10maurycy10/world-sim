@@ -169,7 +169,7 @@ void F_putch(int c) {
   F_cursorx++;
 }
 
-void F_printInt(int in, int base) {
+void F_printInt(int in, int base) {  //this STINKES!!!!!!!!!!!!!!!!!!!
   int i, rem, len = 0, n;
   n = in;
   while (n != 0) {

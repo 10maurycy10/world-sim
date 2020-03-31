@@ -247,7 +247,7 @@ void renderchar(int x, int y, int xpos, int ypos) { //render a x:x(map) y:y(map)
     tylech = gMats[map[x][y].Fmat].matTexture[state];
     if (!gMats[map[x][y].Fmat].matgrownd)
       tylech = '`';
-    if (map[x][y].Fmat == MAT_GRASS) {
+    if (map[x][y].Fmat == MAT_GRASS) { //arrrrrrrrrrrrrrrrrrrgggg!!!!!!!!!!!!!
       tylech = gGrass[((y ^ (gGrasscount / 2)) ^ ((x + 1) ^ ((gGrasscount)))) % gGrasscount];
     }
   } else {

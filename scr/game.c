@@ -253,7 +253,7 @@ void gameloop() {
       profile(T_draw);
       F_clear();
       F_ATTR(C_DIM);
-      F_box(0, 0, SCRX, SCRY + 1, true);
+      F_box(0, 0, SCRX + 1, SCRY + 1, true);
       F_box(HELPXSTART, 0, HELPX + HELPXSTART, HELPY, true);
       F_ATTR(F_COLOR_PAIR(C_TEXT));
       F_move(HELPXSTART + 2, 2);
