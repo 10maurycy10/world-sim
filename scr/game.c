@@ -7,10 +7,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-void fake(const char * a, ...) {}
-
-//#define printf fake
-
 enum RS { RS_CLOSE,
           RS_GAME,
           RS_MAIN };
@@ -100,6 +96,12 @@ bool gameIo(int key, struct Config data) {
         case K_INSPECT:
           menueState = MEN_INSPECT;
           break;
+        case K_load:
+          loadSave(data);
+        break;
+        case K_save:
+          saveSave(data);
+        break;
       }
       break;
     case MEN_INSPECT:
@@ -145,6 +147,7 @@ bool gameIo(int key, struct Config data) {
         case K_OK:
           map[cursorX][cursorY].Fmat = Buildmat;
           makeTyleStable(&map[cursorX][cursorY]);
+          reveleMap(cursorX,cursorY);
           break;
         case K_MEN_UP:
           Buildmat--;
@@ -166,6 +169,7 @@ bool gameIo(int key, struct Config data) {
         case K_OK:
           map[cursorX][cursorY].Lmat = Buildmat;
           makeTyleStable(&map[cursorX][cursorY]);
+          reveleMap(cursorX,cursorY);
           break;
         case K_MEN_UP:
           Buildmat--;

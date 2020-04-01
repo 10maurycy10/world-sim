@@ -40,15 +40,6 @@ struct Tyle {
   //uint16_t Fleval;
 };
 
-struct Save {
-  char magic[5];
-  int16_t X;
-  int16_t Y;
-  struct Tyle data;
-};
-
-#define SAVE_MAGIC ((char *)("ARMS"))
-
 struct Tyle **map;
 struct Tyle **nmap;
 
@@ -65,7 +56,7 @@ void reveleMap(int x, int y) {
 }
 
 void makeTyleStable(struct Tyle *a) {
-  if (gMats[a -> Fmat].mossy || gMats[a -> Lmat].mossy) {
+  if (gMats[a->Fmat].mossy || gMats[a->Lmat].mossy) {
     a->LairData.mosstimer = -1;
   }
 }
@@ -128,62 +119,7 @@ void genaratemap(int seed) { //reset the map
   }
 }
 
-void loadSave(struct Config data) {
-
-  struct Save *s = malloc((data.savefile->size(data.savefile)) + 1);
-  SDL_RWseek(data.savefile, 0, RW_SEEK_SET);
-  data.savefile->read(data.savefile, s, 1, data.savefile->size(data.savefile)); //copy into mem
-
-  if (map) { //free old map
-    for (int i = 0; i < MAPX; i++) {
-      free(map[i]);
-    }
-    for (int i = 0; i < MAPX; i++) {
-      free(nmap[i]);
-    }
-    free(nmap);
-    free(map);
-  }
-
-  if (!(s->magic[0] == SAVE_MAGIC[0] && s->magic[1] == SAVE_MAGIC[1] && s->magic[2] == SAVE_MAGIC[2] && s->magic[3] == SAVE_MAGIC[3]))
-    return;
-  gMapx = (s)->X;
-  gMapy = (s)->Y;
-
-  map = malloc(MAPX * (sizeof(void *)));
-  nmap = malloc(MAPX * (sizeof(void *)));
-  for (int i = 0; i < MAPX; i++) {
-    map[i] = malloc((sizeof(struct Tyle)) * MAPY);
-  }
-  for (int i = 0; i < MAPX; i++) {
-    nmap[i] = malloc((sizeof(struct Tyle)) * MAPY);
-  }
-
-  for (int y = 0; y < MAPY; y++) {
-    for (int x = 0; x < MAPX; x++) {
-      map[x][y] = OFFSET(s->data, x + y * MAPX);
-    }
-  }
-
-  free(s);
-}
-
-void saveSave(struct Config data) {
-  int numTyle = MAPX * MAPY;
-  struct Save *save = malloc(sizeof(struct Save) - sizeof(struct Tyle) + sizeof(struct Tyle) * numTyle);
-  strcpy(save->magic, SAVE_MAGIC);
-  save->Y = MAPY;
-  save->X = MAPX;
-
-  for (int x = 0; x < MAPX; x++)
-    for (int y = 0; y < MAPY; y++)
-      OFFSET(save->data, x + y * MAPX) = map[x][y];
-
-  SDL_RWseek(data.savefile, 0, RW_SEEK_SET);
-  data.savefile->write(data.savefile, save, 1, sizeof(struct Save) - sizeof(struct Tyle) + sizeof(struct Tyle) * numTyle);
-
-  free(save);
-}
+#include "save.c"
 
 void dotyle(int x, int y, struct Tyle *dest) {
   (*dest) = map[x][y];
@@ -194,24 +130,22 @@ void dotyle(int x, int y, struct Tyle *dest) {
   }
 
   if (gMats[map[x][y].Lmat].mossy) {
-    if (map[x][y].temperature > 1100)
-      dest->LairData.mosstimer = gGrasregrow;
-    if (map[x][y].LairData.mosstimer > -1 && map[x][y].temperature < 1100) { //regrow if temp is less than 100 c and it is enabled
-      if (map[x][y].LairData.mosstimer > 0)
-        dest->LairData.mosstimer--;
-      if (map[x][y].LairData.mosstimer == 0)
-        dest->Lmat = MAT_GRASS;
-    }
+    if (map[x][y].temperature < 1100)
+      if (map[x][y].LairData.mosstimer > -1) { //regrow if temp is less than 100 c and it is enabled
+        if (map[x][y].LairData.mosstimer > 0)
+          dest->LairData.mosstimer--;
+        if (map[x][y].LairData.mosstimer == 0)
+          dest->Lmat = MAT_GRASS;
+      }
   }
   if (gMats[map[x][y].Fmat].mossy) {
-    if (map[x][y].temperature > 1100)
-      dest->LairData.mosstimer = gGrasregrow;
-    if (map[x][y].LairData.mosstimer > -1 && map[x][y].temperature < 1100) { //regrow if temp is less than 100 c and it is enabled
-      if (map[x][y].LairData.mosstimer > 0)
-        dest->LairData.mosstimer--;
-      if (map[x][y].LairData.mosstimer == 0)
-        dest->Fmat = MAT_GRASS;
-    }
+    if (!map[x][y].temperature < 1100)
+      if (map[x][y].LairData.mosstimer > -1) { //regrow if temp is less than 100 c and it is enabled
+        if (map[x][y].LairData.mosstimer > 0)
+          dest->LairData.mosstimer--;
+        if (map[x][y].LairData.mosstimer == 0)
+          dest->Fmat = MAT_GRASS;
+      }
   }
   if (dest->temperature > gMats[dest->Lmat].matDecompTemp && gMats[dest->Lmat].matDecompTemp > -1) {
     dest->Lmat = gMats[dest->Lmat].matDecompTo;

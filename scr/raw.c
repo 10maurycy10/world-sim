@@ -31,6 +31,9 @@ int ScanColor(char *buffer, int *i) {
   if (stringmatch(buffer, i, "GREEN", strlen(buffer),false)) {
     return (C_GRASS);
   }
+  if (stringmatch(buffer, i, "BLUE", strlen(buffer),false)) {
+    return (C_WATER);
+  }
   return (C_ERROR);
 }
 
