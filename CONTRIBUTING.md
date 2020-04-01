@@ -1,3 +1,5 @@
-be helpful and constructive.
+# Contributing
 
-thats it!
+Be helpful and constructive.
+
+Thats it!
