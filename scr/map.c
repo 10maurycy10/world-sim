@@ -1,5 +1,6 @@
 #pragma once
 
+
 #define MATS 256
 int MAT_STONE,
     MAT_GRASS,
@@ -25,6 +26,8 @@ void loadMats() {
   MAT_GRASS = getMat("GRASS");
   MAT_AIR = getMat("AIR");
 }
+
+#include "world.c"
 
 char *gGrass = ",'.`";
 #define gGrasscount 4
@@ -139,7 +142,7 @@ void dotyle(int x, int y, struct Tyle *dest) {
       }
   }
   if (gMats[map[x][y].Fmat].mossy) {
-    if (!map[x][y].temperature < 1100)
+    if (map[x][y].temperature > 1100)
       if (map[x][y].LairData.mosstimer > -1) { //regrow if temp is less than 100 c and it is enabled
         if (map[x][y].LairData.mosstimer > 0)
           dest->LairData.mosstimer--;

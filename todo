@@ -1,6 +1,20 @@
+rewright whole game
+
+add world system:
+  world struct
+  world array
+  allockate world
+  render world
+  initworld
+  use to generate map
+  add hight grad
+  MAKE WORLD PERSISTANT:
+    save world
+    load world
+    options:
+      gen new world
+      stant new map
+
 fluid system:
     flow:
     melting:
-
-save system:
-    make save more reliable (detect undersized files)

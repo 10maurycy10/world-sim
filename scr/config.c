@@ -3,6 +3,7 @@
 struct Config {
   SDL_RWops *savefile;
   SDL_RWops *rawfile;
+  SDL_RWops *worldfile;
   char *font;
 };
 
@@ -185,7 +186,27 @@ void readconfig(SDL_RWops *file, struct Config *configstruct) {
       configstruct->savefile = SDL_RWFromFile(strp, "rb+");
       if (!configstruct->savefile)
         configstruct->savefile = SDL_RWFromFile(strp, "wb+");
+      //printf(SDL_GetError());
       printf("savefile: %p\n",configstruct->savefile);
+      free(strp);
+
+      //printf("config.readconfig.savefileread: i : %d , curch: '%c' \n",i,buffer[i]);
+      skipcoments(buffer, &i, size);
+      if (!stringmatch(buffer, &i, "]", size,false)) {
+          //printf("'%c'",buffer[i]);
+          configerror("bad savefile tag unclosed");
+      }
+    } else if (stringmatch(buffer, &i, "[worldfile", size,false)) {
+      skipcoments(buffer, &i, size);
+      //printf("config.readconfig.savefileread: i : %d , curch: '%c' \n",i,buffer[i]);
+      matchcol(buffer, &i, size);
+      skipcoments(buffer, &i, size);
+      strp = getstrtag(buffer, &i, size);
+      configstruct->worldfile = SDL_RWFromFile(strp, "rb+");
+      if (!configstruct->savefile)
+        configstruct->worldfile = SDL_RWFromFile(strp, "wb+");
+      //printf(SDL_GetError());
+      printf("worldfile: %p\n",configstruct->worldfile);
       free(strp);
 
       //printf("config.readconfig.savefileread: i : %d , curch: '%c' \n",i,buffer[i]);

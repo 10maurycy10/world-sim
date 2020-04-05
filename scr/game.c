@@ -9,7 +9,7 @@
 
 enum RS { RS_CLOSE,
           RS_GAME,
-          RS_MAIN };
+          RS_MAIN, };
 enum colors {
   C_TEXT,
   C_OK,
@@ -25,6 +25,7 @@ enum colors {
 };
 
 enum MEN { MEN_MAIN,
+           MEN_WORLD,
            MEN_INSPECT,
            MEN_PLACE,
            MEN_PLACE_FLOOR,
@@ -34,6 +35,7 @@ int menueState = MEN_MAIN;
 void gend();
 #include "env.h"
 #include "font.c"
+int running;
 int cursorX = 0, cursorY = 0;
 #include "config.c"
 #include "map.c"
@@ -63,7 +65,6 @@ enum controls {
   K_debug = SDLK_ESCAPE
 };
 
-int running;
 
 int Buildmat;
 
@@ -80,12 +81,21 @@ void menBuild(bool isTop) {
 bool gameIo(int key, struct Config data) {
 
   int cursorStep = 0;
+  int MaxX = MAPX;
+  int MaxY = MAPY;
 
   switch (menueState) {
+    
+    case MEN_WORLD:
+      MaxX = gWorldX;
+      MaxY = gWorldY;
+      cursorStep = 1;
+      break;
     case MEN_MAIN:
       cursorStep = 5;
       switch (key) {
         case K_EXIT:
+          saveSave(data);
           running = RS_MAIN;
           for (int i = 0; i < 256; i++)
             free(matNames[i]);
@@ -117,6 +127,7 @@ bool gameIo(int key, struct Config data) {
           F_more();
           break;
         case K_EXIT:
+          
           menueState = MEN_MAIN;
           break;
       }
@@ -182,18 +193,15 @@ bool gameIo(int key, struct Config data) {
           break;
       }
       break;
-    default:
-      menueState = MEN_MAIN;
-      break;
   }
-
+  
   switch (key) {
     case K_LEFT:
       if (cursorX > cursorStep - 1)
         cursorX -= cursorStep;
       break;
     case K_RIGHT:
-      if (cursorX < MAPX - cursorStep)
+      if (cursorX < MaxX - cursorStep)
         cursorX += cursorStep;
       break;
     case K_UP:
@@ -201,7 +209,7 @@ bool gameIo(int key, struct Config data) {
         cursorY -= cursorStep;
       break;
     case K_DOWN:
-      if (cursorY < MAPY - cursorStep)
+      if (cursorY < MaxY - cursorStep)
         cursorY += cursorStep;
       break;
   }
@@ -210,6 +218,31 @@ bool gameIo(int key, struct Config data) {
 }
 
 struct Config dataconfig;
+
+void startGame() {
+  getWorld();
+  menueState = MEN_WORLD;
+  while (menueState == MEN_WORLD) {
+    drawWorld();
+    F_refresh();
+
+    SDL_Event e;
+    char key = 0;
+    while (F_gete(&e)) {
+      //printf("event");
+      if (e.type == SDL_KEYDOWN) {
+        key = e.key.keysym.sym;
+        gameIo(key, dataconfig);
+      } else if (e.type == SDL_WINDOWEVENT_CLOSE) {
+        for (int i = 0; i < 256; i++)
+          free(matNames[i]);
+        running = RS_CLOSE;
+        return;
+      }
+    }
+  }
+}
+
 void gameloop() {
   pInit();
   struct Raw rawdata;
@@ -232,7 +265,6 @@ void gameloop() {
   for (int i = 0; i < 100; i++)
     seed += seedblock[i];
   free(seedblock);
-  genaratemap(seed);
 
   F_ATTR(F_COLOR_PAIR(C_OK));
   F_printw("\t\t[DONE]\n", 0, 0);
@@ -326,9 +358,10 @@ void mainloop() {
   SDL_Event e;
   int pos = 0;
 
+  getWorld();
+
   while (running == RS_MAIN) {
     F_clear();
-
     F_move(0, 0);
     F_ATTR(C_DIM);
     F_box(0, 0, 15, 15, true);
@@ -338,10 +371,10 @@ void mainloop() {
     // F_printInt(pos,16);
     if (pos == 0) {
       F_ATTR(C_TEXT);
-      F_printw("\t\tworld sim\n", 0, 0);
+      F_printw("\t\tstart new game\n", 0, 0);
     } else {
       F_ATTR(C_DIM);
-      F_printw("\t\tworld sim\n", 0, 0);
+      F_printw("\t\tstart new game\n", 0, 0);
     }
     if (pos == 1) {
       F_ATTR(C_TEXT);
@@ -351,6 +384,13 @@ void mainloop() {
       F_printw("\t\tabout\n", 0, 0);
     }
     if (pos == 2) {
+      F_ATTR(C_TEXT);
+      F_printw("\t\tplay\n", 0, 0);
+    } else {
+      F_ATTR(C_DIM);
+      F_printw("\t\tplay\n", 0, 0);
+    }
+    if (pos == 3) {
       F_ATTR(C_TEXT);
       F_printw("\t\texit\n", 0, 0);
     } else {
@@ -365,7 +405,7 @@ void mainloop() {
         switch (e.key.keysym.sym) {
           case SDLK_DOWN:
             pos += 1;
-            if (pos > 2)
+            if (pos > 3)
               pos = 2;
             break;
           case SDLK_UP:
@@ -376,10 +416,13 @@ void mainloop() {
           case K_OK:
             switch (pos) {
               case 0:
+                startGame();
+                genaratemap(clock());
                 running = RS_GAME;
                 break;
               case 2:
-                running = RS_CLOSE;
+                loadSave(dataconfig);
+                running = RS_GAME;
                 break;
               case 1:
                 F_move(0, 0);
@@ -397,6 +440,9 @@ void mainloop() {
                 F_box(0, 0, F_cursorx, F_cursory + 1, false);
                 F_ATTR(C_TEXT);
                 F_mbox("world sim\n  by M.Z.  \n");
+                break;
+              case 3:
+                running = RS_CLOSE;
                 break;
             }
             break;

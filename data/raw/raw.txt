@@ -17,7 +17,14 @@ Colons delimitate sections of a tag.
 ]
 [MAT_DEF:"GRASS":
   [DESC:"grass"]
-  [DRAW: "XXX"] This value is currently ignored due to no support for varied tyle-sets in raws. (for now)
+  [DRAW: ",XX"] This value is currently ignored due to no support for varied tyle-sets in raws. (for now)
   [COLOR:GREEN:ERROR:ERROR]
+  [ORGANIC]
+]
+
+[MAT_DEF:"WOOD":
+  [DESC:"wood plank"]
+  [DRAW:"==="]
+  [COLOR:BLUE:ERROR:ERROR]
   [ORGANIC]
 ]

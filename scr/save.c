@@ -3,8 +3,10 @@
 
 struct Save {
   char magic[5];
-  int16_t X;
-  int16_t Y;
+  int16_t Xsize;
+  int16_t Ysize;
+  int16_t Xcursor;
+  int16_t Ycorsor;
   struct Tyle data;
 };
 
@@ -24,6 +26,12 @@ void loadSave(struct Config data) {
     return;
   }
 
+  if ((data.savefile)->size(data.savefile) != (sizeof(struct Save) - sizeof(struct Tyle) + (sizeof(struct Tyle) * (s)->Ysize * (s)->Xsize) )) {
+    printf("save is to small");
+    return;
+  }
+
+
     if (map) { //free old map
     for (int i = 0; i < MAPX; i++) {
       free(map[i]);
@@ -34,9 +42,11 @@ void loadSave(struct Config data) {
     free(nmap);
     free(map);
   }
-  
-  gMapx = (s)->X;
-  gMapy = (s)->Y;
+
+  cursorY = s->Ycorsor;
+  cursorX = s->Xcursor;
+  gMapx = (s)->Xsize;
+  gMapy = (s)->Ysize;
 
   map = malloc(MAPX * (sizeof(void *)));
   nmap = malloc(MAPX * (sizeof(void *)));
@@ -58,20 +68,28 @@ void loadSave(struct Config data) {
 
 void saveSave(struct Config data) {
 
-  printf("%p",data.savefile);
-
   int numTyle = MAPX * MAPY;
   struct Save *save = malloc(sizeof(struct Save) - sizeof(struct Tyle) + sizeof(struct Tyle) * numTyle);
   strcpy(save->magic, SAVE_MAGIC);
-  save->Y = MAPY;
-  save->X = MAPX;
+  save->Ysize = MAPY;
+  save->Xsize = MAPX;
+  save->Ycorsor = cursorY;
+  save->Xcursor = cursorX;
 
   for (int x = 0; x < MAPX; x++)
     for (int y = 0; y < MAPY; y++)
       OFFSET(save->data, x + y * MAPX) = map[x][y];
 
   SDL_RWseek(data.savefile, 0, RW_SEEK_SET);
-  data.savefile->write(data.savefile, save, 1, sizeof(struct Save) - sizeof(struct Tyle) + sizeof(struct Tyle) * numTyle);
+  if (data.savefile->write(data.savefile, save, 1, sizeof(struct Save) - sizeof(struct Tyle) + sizeof(struct Tyle) * numTyle)  != (sizeof(struct Save) - sizeof(struct Tyle) + sizeof(struct Tyle) * numTyle)) {
+    F_ATTR(F_COLOR_PAIR(C_TEXT));
+    F_mbox("failed to save world");
+  }
 
   free(save);
+}
+
+
+bool loadWorld() { //retun 1 if failed
+  return 1;
 }
