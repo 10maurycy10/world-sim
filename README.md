@@ -1,8 +1,10 @@
 # world-sim
 
-a program to simulate a world for fun (not relisticly)
+a program to simulate a world for fun (not realistically)
 
-## MASSIVELY WORK IN PROGRESS
+# MASSIVELY WORK IN PROGRESS
+
+# RE-WRIGHT IN PROGRESS
 
 ## defines
 

@@ -5,6 +5,7 @@
         "stdlib.h": "c",
         "curses.h": "c",
         "stdint.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "sdl.h": "c"
     }
 }

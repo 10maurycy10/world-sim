@@ -17,10 +17,19 @@
       _EXIT(1);   \
   } while (0)
 
-int toolkit_main(int, char **);
-int main(int x, char **y) {
-  toolkit_main(x, y);
-}
+struct Vect2 {
+  double x;
+  double y;
+};
 
-#define main toolkit_main
+struct IntVect2 {
+  int x;
+  int y;
+};
+
+struct IntConstVect2 {
+  Uint32 x;
+  Uint32 y;
+};
+
 #endif
