@@ -11,8 +11,8 @@
 #define Null ((void*)0)
 #define OFFSET(val,offset) (*(&val + offset))
 
-#define AUTO_CASE(a,b) case a :  \
-                        b;          \
+#define AUTO_CASE(a,b) case a :;  \
+                        {b;}          \
                         break;
 
 #define assert(x) \

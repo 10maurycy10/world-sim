@@ -61,11 +61,39 @@ void C_addch(char ch, int attr) { //auto manage cursor
     }
 }
 
-void C_puts(char* str, int attr) {
+void C_puts(const char* str, int attr) {
     int i = 0;
     while (str[i]) {
         C_addch(str[i], attr);
         i++;
+    }
+}
+
+void C_printf(const char* formatString,int attrs, int params ,... ) {
+    va_list extra;
+    va_start(extra, params);
+    int argPos = 0;
+    for (int i = 0; formatString[i]; i++) {
+        if (formatString[i] == '%') {
+            i++;
+            switch (formatString[i]) {
+                AUTO_CASE('s',
+                    C_puts(va_arg(extra, char*),attrs)
+                )
+                AUTO_CASE('d',
+                    char buffer[sizeof(char) * sizeof(int) * 4 + 1];
+                    sprintf(buffer, "%d", va_arg(extra, int));
+                    C_puts(buffer,attrs);
+                )
+                AUTO_CASE('x',
+                    char buffer[sizeof(char) * sizeof(int) * 4 + 1];
+                    sprintf(buffer, "%x", va_arg(extra, int));
+                    C_puts(buffer,attrs);
+                )
+            }
+        } else {
+            C_addch(formatString[i],attrs);
+        }
     }
 }
 
@@ -89,7 +117,7 @@ void pollIo(void (*callback)(int)) {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
-      AUTO_CASE(SDL_KEYDOWN, C_puts(SDL_GetKeyName(event.key.keysym.sym),FRONT_COLORS_TEXT); C_puts("\n",FRONT_COLORS_TEXT); callback(event.key.keysym.sym))
+      AUTO_CASE(SDL_KEYDOWN, callback(event.key.keysym.sym))
 
       /* SDL_QUIT event (window close) */
       AUTO_CASE(SDL_QUIT,
