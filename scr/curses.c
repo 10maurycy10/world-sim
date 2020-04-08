@@ -5,6 +5,8 @@
 #define C_CHAR_Y_NUM 16
 // RRBBGG
 
+#define f_block 0xDB
+
 #define encodeC(FR, FG, FB, BR, BB, BG) (FR << 7 | FG << 5 | FB << 3 | BR | BG << 1 | BB << 2) //F* are 0-3 , B* are 0-1
 
 #define extractFR(a) ((a & 0b110000000) >> 7) * 85
@@ -18,20 +20,50 @@
 enum FRONT_COLORS { FRONT_COLORS_RED = encodeC(3, 0, 0, 0, 0, 0),
                     FRONT_COLORS_GREEN = encodeC(0, 3, 0, 0, 0, 0),
                     FRONT_COLORS_BLUE = encodeC(0, 0, 3, 0, 0, 0),
-                    FRONT_COLORS_TEXT = encodeC(3, 3, 3, 0, 0, 0) };
+                    FRONT_COLORS_TEXT = encodeC(3, 3, 3, 0, 0, 0),
+                    FRONT_COLORS_DIM = encodeC(2, 2, 2, 0, 0, 0) };
 
 enum BACK_COLORS { BACK_COLORS_RED = encodeC(0, 0, 0, 1, 0, 0),
                    BACK_COLORS_GREEN = encodeC(0, 0, 0, 0, 1, 0),
                    BACK_COLORS_BLUE = encodeC(0, 0, 0, 0, 0, 1),
                    BACK_COLORS_WHIGHT = encodeC(0, 0, 0, 1, 1, 1) };
 
+struct Viewport {
+  struct IntVect2 tl;
+  struct IntVect2 br;
+};
+
 SDL_Window *gWindow;
 SDL_Surface *gWindowSurface;
 SDL_Surface *gFont;
 int newlinex = 0;
-struct IntVect2 C_cursor = {0,0};
+struct IntVect2 C_cursor = {0, 0};
 struct IntVect2 fontSize;
 struct IntVect2 windowSize;
+struct Viewport screen = {{0, 0}, {0, 0}};
+
+void C_clear() {
+  SDL_FillRect(gWindowSurface, NULL, SDL_MapRGB(gWindowSurface->format, 0, 0, 0));
+}
+
+void move(int x, int y) {
+  C_cursor.x = x;
+  C_cursor.y = y;
+}
+
+struct Viewport C_mkPort(int x, int y, int x2, int y2) {
+  struct Viewport self;
+  self.tl.x = x;
+  self.tl.y = y;
+  self.br.x = x2;
+  self.br.y = y2;
+  return self;
+}
+
+void C_focus(struct Viewport target) {
+  newlinex = target.tl.x + 1;
+  move(target.tl.x + 1, target.tl.y + 1);
+}
 
 void C_mvaddch(int x, int y, int ch, int c) {
   int collom = ch / C_CHAR_X_NUM;
@@ -51,50 +83,69 @@ void C_mvaddch(int x, int y, int ch, int c) {
   SDL_BlitSurface(gFont, &scr, gWindowSurface, &dst);
 }
 
+void C_vline(int x, int s, int e, int ch, int attr) {
+  for (int y = s; !(y > e); y++) {
+    C_mvaddch(x, y, ch, attr);
+  }
+}
+
+void C_hline(int y, int s, int e, int ch, int attr) {
+  for (int x = s; !(x > e); x++) {
+    C_mvaddch(x, y, ch, attr);
+  }
+}
+
+void C_box(struct Viewport target, int attr) {
+  C_hline(target.br.y, target.tl.x, target.br.x, f_block, attr);
+  C_hline(target.tl.y, target.tl.x, target.br.x, f_block, attr);
+  C_vline(target.br.x, target.tl.y, target.br.y, f_block, attr);
+  C_vline(target.tl.x, target.tl.y, target.br.y, f_block, attr);
+}
+
 void C_addch(char ch, int attr) { //auto manage cursor
-    if (ch == '\n') {
-        C_cursor.y++;
-        C_cursor.x = newlinex;
+  if (ch == '\n') {
+    C_cursor.y++;
+    C_cursor.x = newlinex;
+  } if (ch == '\t') {} else {
+    C_mvaddch(C_cursor.x, C_cursor.y, ch, attr);
+    C_cursor.x++;
+  }
+}
+
+void C_puts(const char *str, int attr) {
+  int i = 0;
+  while (str[i]) {
+    C_addch(str[i], attr);
+    i++;
+  }
+}
+
+void C_printf(const char *formatString, int attrs, int params, ...) {
+  va_list extra;
+  va_start(extra, params);
+  for (int i = 0; formatString[i]; i++) {
+    if (formatString[i] == '%') {
+      i++;
+      switch (formatString[i]) {
+        AUTO_CASE('s',
+                  C_puts(va_arg(extra, char *), attrs))
+        AUTO_CASE('d',
+                  char buffer[sizeof(char) * sizeof(int) * 4 + 1];
+                  sprintf(buffer, "%d", va_arg(extra, int));
+                  C_puts(buffer, attrs);)
+        AUTO_CASE('x',
+                  char buffer[sizeof(char) * sizeof(int) * 4 + 1];
+                  sprintf(buffer, "%x", va_arg(extra, int));
+                  C_puts(buffer, attrs);)
+        AUTO_CASE('p',
+                  char buffer[sizeof(char) * sizeof(void *) * 4 + 1];
+                  sprintf(buffer, "%p", va_arg(extra, void *));
+                  C_puts(buffer, attrs);)
+      }
     } else {
-        C_mvaddch(C_cursor.x, C_cursor.y, ch, attr);
-        C_cursor.x++;
+      C_addch(formatString[i], attrs);
     }
-}
-
-void C_puts(const char* str, int attr) {
-    int i = 0;
-    while (str[i]) {
-        C_addch(str[i], attr);
-        i++;
-    }
-}
-
-void C_printf(const char* formatString,int attrs, int params ,... ) {
-    va_list extra;
-    va_start(extra, params);
-    int argPos = 0;
-    for (int i = 0; formatString[i]; i++) {
-        if (formatString[i] == '%') {
-            i++;
-            switch (formatString[i]) {
-                AUTO_CASE('s',
-                    C_puts(va_arg(extra, char*),attrs)
-                )
-                AUTO_CASE('d',
-                    char buffer[sizeof(char) * sizeof(int) * 4 + 1];
-                    sprintf(buffer, "%d", va_arg(extra, int));
-                    C_puts(buffer,attrs);
-                )
-                AUTO_CASE('x',
-                    char buffer[sizeof(char) * sizeof(int) * 4 + 1];
-                    sprintf(buffer, "%x", va_arg(extra, int));
-                    C_puts(buffer,attrs);
-                )
-            }
-        } else {
-            C_addch(formatString[i],attrs);
-        }
-    }
+  }
 }
 
 void C_init() {
@@ -110,6 +161,11 @@ void C_loadFont(char *font) {
   windowSize.x = gWindowSurface->w / fontSize.x;
   windowSize.y = gWindowSurface->h / fontSize.y;
 
+  screen.tl.x = 0;
+  screen.tl.y = 0;
+  screen.br.y = windowSize.y - 1;
+  screen.br.x = windowSize.x - 1;
+
   SDL_SetColorKey(gFont, 1, SDL_MapRGB(gFont->format, 255, 0, 0));
 }
 
@@ -124,9 +180,20 @@ void pollIo(void (*callback)(int)) {
                 SDL_Quit();
                 _Exit(0);)
 
-      AUTO_CASE(SDL_WINDOWEVENT_RESIZED, gWindowSurface = SDL_GetWindowSurface(gWindow); windowSize.x = gWindowSurface->w / fontSize.x; windowSize.y = gWindowSurface->h / fontSize.y;)
+      AUTO_CASE(
+          SDL_WINDOWEVENT,
+          if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+            gWindowSurface = SDL_GetWindowSurface(gWindow);
+            windowSize.x = gWindowSurface->w / fontSize.x;
+            windowSize.y = gWindowSurface->h / fontSize.y;
+            screen.tl.x = 0;
+            screen.tl.y = 0;
+            screen.br.y = windowSize.y - 1;
+            screen.br.x = windowSize.x - 1;
+          })
     }
   }
+  printf("%s", SDL_GetError());
 }
 
 void C_refresh() {
