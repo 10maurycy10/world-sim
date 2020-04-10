@@ -7,7 +7,7 @@
 
 #define f_block 0xDB
 
-#define encodeC(FR, FG, FB, BR, BB, BG) (FR << 7 | FG << 5 | FB << 3 | BR | BG << 1 | BB << 2) //F* are 0-3 , B* are 0-1
+#define encodeC(FR, FG, FB, BR, BG, BB) (FR << 7 | FG << 5 | FB << 3 | BR | BG << 1 | BB << 2) //F* are 0-3 , B* are 0-1
 
 #define extractFR(a) ((a & 0b110000000) >> 7) * 85
 #define extractFG(a) ((a & 0b001100000) >> 5) * 85

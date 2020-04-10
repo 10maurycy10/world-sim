@@ -1,6 +1,6 @@
 #include "toolkit.h"
 
-
+bool haveMap = 0;
 
 enum MENUE { MENUE_MAIN,
              MENUE_GAME,
@@ -52,8 +52,14 @@ int mainMenue() { //if the state ends, this returns next state
     C_puts("\n\n\n",0);
 
     drawOpton(0,"\t\t\tplay new game\n");
-    drawOpton(1,"\t\t\tcontinue\n");
-    drawOpton(2,"\t\t\tnew world\n");
+    if (haveMap) //ARGGGGGGGGGGGGGGGGGGG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      drawOpton(1,"\t\t\tcontinue\n");
+    else
+      C_puts("\t\t\tcontinue\n",selecton == 1 ?encodeC(3,0,0,0,0,0) : encodeC(1,1,1,0,0,0));
+    if (0)
+      drawOpton(2,"\t\t\tnew world\n");
+    else
+      C_puts("\t\t\tnew world\n",selecton == 2 ?encodeC(3,0,0,0,0,0) : encodeC(1,1,1,0,0,0));
     drawOpton(3,"\t\t\texit\n");
 
     C_refresh();

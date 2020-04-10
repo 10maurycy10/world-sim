@@ -5,7 +5,12 @@ int gameLoop() {  //if the state ends, this returns next state
   void ioHandle(int x,int mod) {
     switch (x) {
       AUTO_CASE(SDLK_ESCAPE, nextState = MENUE_MAIN );
+      AUTO_CASE(SDLK_UP, Cursor.y--; );
+      AUTO_CASE(SDLK_DOWN, Cursor.y++; );
+      AUTO_CASE(SDLK_LEFT, Cursor.x--; );
+      AUTO_CASE(SDLK_RIGHT, Cursor.x++; );
     }
+    Cursor.x = SDL_min(SDL_max(Cursor.x,0),mapSize.x);
   };
   int p = 0;
   while (nextState == MENUE_GAME) {
@@ -20,6 +25,7 @@ int gameLoop() {  //if the state ends, this returns next state
     p = SDL_GetTicks();
     C_focus(screen);
     drawMap(Cursor,screen);
+    ticktyles();
     C_refresh();
   }
   return nextState;

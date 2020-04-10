@@ -1,3 +1,5 @@
+#include "mats.c"
+
 struct Tyle {
   int32_t temperature; // 1000 = 0c  1100 = 100c
   uint16_t Lmat;
@@ -13,5 +15,5 @@ void dotyle(int x, int y, struct Tyle* dst, struct Tyle** map) {
 }
 
 void drawTyle(int sx,int sy,struct Tyle tyle) {
-  C_mvaddch(sx,sy,'T',FRONT_COLORS_BLUE);
+  C_mvaddch(sx, sy, gMats[tyle.Lmat].matTexture[0], gMats[tyle.Lmat].matCol[0]);
 }

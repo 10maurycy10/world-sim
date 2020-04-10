@@ -13,3 +13,12 @@ struct MAT {
 };
 
 struct MAT gMats[MATS];
+
+enum {MAT_GRASS = 0, MAT_STONE = 1};
+
+void loadMatRaw() {
+    gMats[MAT_GRASS].matTexture[0] = ',';
+    gMats[MAT_STONE].matTexture[0] = '#';
+    gMats[MAT_GRASS].matCol[0] = encodeC(0,3,0,0,0,0);
+    gMats[MAT_STONE].matCol[0] = encodeC(3,3,3,0,0,0);
+}

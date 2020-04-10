@@ -1,4 +1,7 @@
 rewright whole game:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  add raw mat parser
+  fix world gen
+  add build back
 
 add world system:
   world struct
