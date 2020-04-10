@@ -21,7 +21,8 @@ enum FRONT_COLORS { FRONT_COLORS_RED = encodeC(3, 0, 0, 0, 0, 0),
                     FRONT_COLORS_GREEN = encodeC(0, 3, 0, 0, 0, 0),
                     FRONT_COLORS_BLUE = encodeC(0, 0, 3, 0, 0, 0),
                     FRONT_COLORS_TEXT = encodeC(3, 3, 3, 0, 0, 0),
-                    FRONT_COLORS_DIM = encodeC(2, 2, 2, 0, 0, 0) };
+                    FRONT_COLORS_DIM = encodeC(2, 2, 2, 0, 0, 0),
+                    FRONT_COLORS_DARK_RED = encodeC(1,0,0,0,0,0) };
 
 enum BACK_COLORS { BACK_COLORS_RED = encodeC(0, 0, 0, 1, 0, 0),
                    BACK_COLORS_GREEN = encodeC(0, 0, 0, 0, 1, 0),
@@ -63,6 +64,11 @@ struct Viewport C_mkPort(int x, int y, int x2, int y2) {
 void C_focus(struct Viewport target) {
   newlinex = target.tl.x + 1;
   move(target.tl.x + 1, target.tl.y + 1);
+}
+
+void C_focus_title(struct Viewport target) {
+  newlinex = target.tl.x + 3;
+  move(target.tl.x + 3, target.tl.y);
 }
 
 void C_mvaddch(int x, int y, int ch, int c) {
@@ -169,11 +175,11 @@ void C_loadFont(char *font) {
   SDL_SetColorKey(gFont, 1, SDL_MapRGB(gFont->format, 255, 0, 0));
 }
 
-void pollIo(void (*callback)(int)) {
+void pollIo(void (*callback)(int,int)) {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
-      AUTO_CASE(SDL_KEYDOWN, callback(event.key.keysym.sym))
+      AUTO_CASE(SDL_KEYDOWN, callback(event.key.keysym.sym,event.key.keysym.mod))
 
       /* SDL_QUIT event (window close) */
       AUTO_CASE(SDL_QUIT,
