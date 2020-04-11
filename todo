@@ -1,7 +1,15 @@
-rewright whole game:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  add raw mat parser
+rewright whole game:
+  add raw mat parser:
+    skip comments
+    pharse tockens
+    read tags
   fix world gen
   add build back
+  saves
+
+
+
+
 
 add world system:
   world struct

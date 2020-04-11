@@ -10,6 +10,7 @@
 #define false 0
 #define Null ((void*)0)
 #define OFFSET(val,offset) (*(&val + offset))
+#define GET_V_SIZE(object, type, num) (sizeof(object) + (sizeof(type) * num))
 
 #define AUTO_CASE(a,b) case a :;  \
                         {b;}          \
@@ -35,5 +36,10 @@ struct IntConstVect2 {
   Uint32 x;
   Uint32 y;
 };
+
+struct Str {
+  int size;
+  char data[];
+};  
 
 #endif

@@ -8,7 +8,7 @@ struct Tyle {
   struct LData {
     int16_t mosstimer;
   } LairData;
-};
+} __attribute__((packed));
 
 void dotyle(int x, int y, struct Tyle* dst, struct Tyle** map) {
   *dst = map[x][y];
