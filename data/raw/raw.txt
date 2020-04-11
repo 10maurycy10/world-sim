@@ -1,3 +1,7 @@
- [ MAT ] 
- MAT 
- ( : MAT : ) 
+[ MAT:GRASS: 
+  [DRAW:GGG]
+]
+
+[ MAT:GRASS1: 
+  [DRAW:.GG]
+]

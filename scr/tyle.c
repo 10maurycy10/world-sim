@@ -15,5 +15,5 @@ void dotyle(int x, int y, struct Tyle* dst, struct Tyle** map) {
 }
 
 void drawTyle(int sx,int sy,struct Tyle tyle) {
-  C_mvaddch(sx, sy, gMats[tyle.Lmat].matTexture[0], gMats[tyle.Lmat].matCol[0]);
+  C_mvaddch(sx, sy, gMats[tyle.Lmat].Texture[0], gMats[tyle.Lmat].Col[0]);
 }

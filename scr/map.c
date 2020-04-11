@@ -61,7 +61,7 @@ void generatemap() {
   for (int x = 0; x < mapSize.x; x++)
     for(int y = 0; y < mapSize.y; y++) {
       map[x][y].temperature = 1020;
-      map[x][y].Lmat = MAT_STONE;
+      map[x][y].Lmat = MAT_GRASS;
     }
 
 }
