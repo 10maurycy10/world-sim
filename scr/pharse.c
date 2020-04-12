@@ -41,7 +41,7 @@ char* getID(int* index, struct Str* text) {
     SDL_memcpy(data, text->data + *index, (size - 0) * sizeof(char));
     data[size] = 0;
 
-    *index += i;
+    *index += i - 1;
 
     return data;
 }
@@ -55,11 +55,11 @@ bool TockenMatch(char* tag, int* i, struct Str* data) {
         if (data -> data[temp] != tag[ofset]) {
             return 0; //un matched char
         }
-        temp++;
         ofset++;
         if (!(temp < data->size)) {
             return 0; //fall on EOF
         }
+        temp++;
     }
     (*i) = temp;
     return 1;
@@ -69,6 +69,39 @@ void checkTag(char* tag, int* i, struct Str* data, void (*callback)(struct Str*,
     if (TockenMatch(tag,i,data)) {
         callback(data,i);
     }
+}
+
+char *getstrtag(int *ip, struct Str* data) { //gets a string and malock() it
+  int strsize = 0;
+  char *string;
+  int i = 0;
+
+  if (*ip > data->size) {
+  } //get strlen
+  if ((data->data[*ip]) != '"') {
+  }
+  (*ip)++; //skip opener "
+  //printf("config.getstrtag.pos : %d\n",((*ip)+strsize));
+  while (((*ip) + strsize) < data->size) {
+    // printf("config.getstrtag.pos : %d\n",((*ip)+strsize));
+    if (data->data[*ip + strsize] == '"') {
+      break;
+    }
+    strsize++;
+  }
+
+  //printf("config.getstrtag.data->size : %d \n",strsize);
+
+  string = (char *)malloc(strsize + 1);
+
+  while (i < strsize) {
+    string[i] = data->data[*ip];
+    (*ip)++;
+    i++;
+  }
+  (*ip)++;
+  string[strsize] = 0x00; //null pad
+  return (string);        //return matched string
 }
 
 void readFile(char* filePath, void (*callback)(struct Str*)) {

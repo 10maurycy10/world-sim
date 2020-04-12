@@ -45,7 +45,7 @@ int mainMenue() { //if the state ends, this returns next state
     struct Viewport center = C_mkPort(screen.br.x / 2 - 10,screen.tl.y,screen.br.x,screen.br.y);
     C_clear();
     C_focus(center);
-    C_box(screen,FRONT_COLORS_DARK_RED);
+    C_box(screen,FRONT_COLORS_DIM);
     C_printf("\n\n\t\t\tWorld of Doom\n",FRONT_COLORS_RED,0);
     C_printf("\t\t\tverson: %d.%d-%d\n",FRONT_COLORS_DIM,3,0,0,4);
 

@@ -6,7 +6,8 @@
         "curses.h": "c",
         "stdint.h": "c",
         "math.h": "c",
-        "sdl.h": "c"
+        "sdl.h": "c",
+        "typeinfo": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

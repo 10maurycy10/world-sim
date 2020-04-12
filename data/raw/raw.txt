@@ -1,7 +1,14 @@
-[ MAT:GRASS: 
-  [DRAW:GGG]
+[MAT: STONE:
+  [DRAW: "#~ "]
+  [COLOR: 3:3:3: 3:0:0: 3:3:2]
+  [MELT: 7000]
 ]
 
-[ MAT:GRASS1: 
-  [DRAW:.GG]
+[MAT: AIR: [VOID] [DRAW: "..."] [COLOR: 1:1:1: 0:0:0: 0:0:0] ]
+
+[MAT: GRASS:
+  [DRAW: ",**"]
+  [COLOR: 0:2:0: 3:0:0: 3:0:0]
+  [MELT: 1064]
+  [DESC: "grass" :0:3:0]
 ]

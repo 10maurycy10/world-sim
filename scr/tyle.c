@@ -15,5 +15,11 @@ void dotyle(int x, int y, struct Tyle* dst, struct Tyle** map) {
 }
 
 void drawTyle(int sx,int sy,struct Tyle tyle) {
-  C_mvaddch(sx, sy, gMats[tyle.Lmat].Texture[0], gMats[tyle.Lmat].Col[0]);
+  int ch = gMats[tyle.Lmat].Texture[0];
+  int attr = gMats[tyle.Lmat].Col[0];
+  if (tyle.temperature > gMats[tyle.Lmat].Melt) {
+    ch = gMats[tyle.Lmat].Texture[1];
+    attr = gMats[tyle.Lmat].Col[1];
+  }
+  C_mvaddch(sx, sy, ch, attr);
 }
