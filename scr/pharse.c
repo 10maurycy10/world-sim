@@ -77,8 +77,10 @@ char *getstrtag(int *ip, struct Str* data) { //gets a string and malock() it
   int i = 0;
 
   if (*ip > data->size) {
+    return 0;
   } //get strlen
   if ((data->data[*ip]) != '"') {
+    return 0;
   }
   (*ip)++; //skip opener "
   //printf("config.getstrtag.pos : %d\n",((*ip)+strsize));

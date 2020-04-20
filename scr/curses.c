@@ -134,7 +134,12 @@ void C_printf(const char *formatString, int attrs, int params, ...) {
       i++;
       switch (formatString[i]) {
         AUTO_CASE('s',
-                  C_puts(va_arg(extra, char *), attrs))
+                  char* s = va_arg(extra, char *);
+                  if (s)
+                    C_puts(s, attrs);
+                  else
+                    C_puts("(null)",attrs);
+        )
         AUTO_CASE('d',
                   char buffer[sizeof(char) * sizeof(int) * 4 + 1];
                   sprintf(buffer, "%d", va_arg(extra, int));

@@ -4,13 +4,15 @@ int gameLoop() {  //if the state ends, this returns next state
 
   struct Viewport mapb = {{0,0},{0,0}};
   struct Viewport helpScreen;
-  enum {NONE,LOOK};
+  enum {NONE,LOOK,PLACE};
   int render = NONE;
   int nextState = MENUE_GAME;
   void ioHandle(int x,int mod) {
+    bool isfloor = 0;
     switch (x) {
       AUTO_CASE(SDLK_ESCAPE, if (render == NONE)  nextState = MENUE_MAIN; else render = NONE );
       AUTO_CASE(SDLK_k, render = LOOK );
+      AUTO_CASE(SDLK_b, render = PLACE );
       AUTO_CASE(SDLK_UP, Cursor.y--; );
       AUTO_CASE(SDLK_DOWN, Cursor.y++; );
       AUTO_CASE(SDLK_LEFT, Cursor.x--; );
@@ -50,9 +52,15 @@ int gameLoop() {  //if the state ends, this returns next state
         break;
       case LOOK:
         C_printf(" Esc : exit\n",FRONT_COLORS_TEXT,0);
-        C_printf("\n  ",FRONT_COLORS_TEXT,0);
+        C_printf("\nLOOK\n",FRONT_COLORS_TEXT,0);
         C_puts(gMats[map[Cursor.x][Cursor.y].Lmat].desc,gMats[map[Cursor.x][Cursor.y].Lmat].nameCol);
         C_puts("\n",FRONT_COLORS_TEXT);
+        break;
+      case PLACE:
+        C_printf(" Esc : exit\n",FRONT_COLORS_TEXT,0);
+        C_printf("\nbuild\n",FRONT_COLORS_TEXT,0);
+        break;
+
     }
     C_printf("",FRONT_COLORS_TEXT,0);
     ticktyles();

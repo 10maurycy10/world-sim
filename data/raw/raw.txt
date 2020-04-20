@@ -1,10 +1,15 @@
 [MAT: STONE:
   [DRAW: "#~ "]
   [COLOR: 3:3:3: 3:0:0: 3:3:2]
+  [DESC: "rock" :1:1:1]
   [MELT: 7000]
 ]
-
-[MAT: AIR: [VOID] [DRAW: "..."] [COLOR: 1:1:1: 0:0:0: 0:0:0] ]
+[MAT: AIR:
+  [VOID]
+  [DRAW: "..."]
+  [COLOR: 1:1:1: 0:0:0: 0:0:0]
+  [DESC: "empty space" :1:1:1]
+]
 
 [MAT: GRASS:
   [DRAW: ",**"]

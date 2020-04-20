@@ -86,27 +86,31 @@ void loadMatRaw() {
       }
       void Tdesc(struct Str * data, int *i) {
         req(":",i,data);
+        printf("i: %d\n",*i);
+        skipTextUntilNonWhiteSpace(i, data);
         gMats[cid].desc = getstrtag(i,data);
+        printf("desc : %s\n",gMats[cid].desc);
         int d[3];
         for (int e = 0; e < 3; e++) {
+          skipTextUntilNonWhiteSpace(i, data);
           req(":", i, data);
           skipTextUntilNonWhiteSpace(i, data);
           char *text = getID(i, data);
           sscanf(text, "%d", &d[e]);
           free(text);
-          skipTextUntilNonWhiteSpace(i, data);
+          printf("i: %d\n",*i);
         }
         gMats[cid].nameCol = encodeC(d[0],d[1],d[2],0,0,0);
       }
       void Tcolor(struct Str * data, int *i) {
         int d[9];
         for (int e = 0; e < 9; e++) {
+          skipTextUntilNonWhiteSpace(i, data);
           req(":", i, data);
           skipTextUntilNonWhiteSpace(i, data);
           char *text = getID(i, data);
           sscanf(text, "%d", &d[e]);
           free(text);
-          skipTextUntilNonWhiteSpace(i, data);
         }
         for (int e = 0; e < 3; e++) {
           gMats[cid].Col[e] |= encodeC(d[e * 3 + 0], d[e * 3 + 1], d[e * 3 + 2], 0, 0, 0);
@@ -176,7 +180,7 @@ void loadMatRaw() {
 
         skipTextUntilNonWhiteSpace(&i, data);
         if (!TockenMatch("]", &i, data)) {
-          printf("error in raws TAG_UNCOSED\n");
+          printf("error in raws TAG_UNCOSED %c %d\n",data->data[i], i);
           return;
         }
       } else if (i < data->size) { //if not got tag start but not EOF
